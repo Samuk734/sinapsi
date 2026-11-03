@@ -1,0 +1,18 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "sinapsi",
+  "description": "Sinapsi: azienda di agenti per Claude Code con dashboard 3D.",
+  "owner": {
+    "name": "Samuk734",
+    "url": "https://github.com/Samuk734"
+  },
+  "plugins": [
+    {
+      "name": "sinapsi",
+      "description": "Un'azienda di 25 agenti specializzati per Claude Code: la chat diventa il Capo, sceglie impiegato, modello ed effort, e tutto si vede dal vivo in 3D come rete neurale o come ufficio.",
+      "source": "./",
+      "category": "productivity",
+      "homepage": "https://github.com/Samuk734/sinapsi"
+    }
+  ]
+}

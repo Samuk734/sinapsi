@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <title>Sinapsi</title>
+  <meta http-equiv="refresh" content="0; url=neurale.html">
+  <style>html, body { margin: 0; height: 100%; background: #01020a; }</style>
+</head>
+<body>
+  <script>
+    // vista preferita dell'ultima volta: rete neurale o ufficio
+    let vista = 'neurale.html';
+    try { if (localStorage.getItem('sinapsi.vista') === 'ufficio') vista = 'ufficio.html'; } catch { /* niente storage: si apre la rete */ }
+    location.replace(vista);
+  </script>
+</body>
+</html>

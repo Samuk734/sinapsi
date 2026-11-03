@@ -1,0 +1,18 @@
+{
+  "port": 7420,
+  "host": "127.0.0.1",
+  "routing": {
+    "sogliaAffidabilita": 0.8,
+    "note": "busta con affidabilita >= soglia va al Capo, sotto soglia (o revisione richiesta) passa dal capo reparto"
+  },
+  "modelli": {
+    "haiku":  { "id": "claude-haiku-5-5",  "nome": "Haiku 5.5",  "attivo": true,  "colore": "#4ade80", "prezzo": { "in": 0.10, "out": 0.50, "cache": 0.01 } },
+    "sonnet": { "id": "claude-sonnet-5-5", "nome": "Sonnet 5.5", "attivo": true,  "colore": "#60a5fa", "prezzo": { "in": 2.00, "out": 10.00, "cache": 0.20 } },
+    "opus":   { "id": "claude-opus-5-5",   "nome": "Opus 5.5",   "attivo": true,  "colore": "#c084fc", "prezzo": { "in": 4.00, "out": 20.00, "cache": 0.20 } },
+    "fable":  { "id": "claude-fable-5-1",  "nome": "Fable 5.1",  "attivo": true,  "colore": "#fbbf24", "prezzo": { "in": 10.00, "out": 50.00, "cache": 0.25 } },
+    "mythos": { "id": "claude-mythos-5-1", "nome": "Mythos 5.1", "attivo": false, "colore": "#f87171", "prezzo": { "in": 10.00, "out": 50.00, "cache": 0.25 },
+                "nota": "Solo Project Glasswing: attivare solo se l'account ha accesso" }
+  },
+  "prezziNota": "USD per milione di token, prezzi API di listino: servono solo a stimare il costo equivalente. Il prezzo cache di Haiku e' una stima.",
+  "effort": ["low", "medium", "high", "xhigh", "max"]
+}

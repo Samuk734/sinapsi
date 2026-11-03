@@ -1,0 +1,10 @@
+node_modules/
+*.log
+
+# appunti di lavoro locali e configurazioni della macchina
+MEMORIA.md
+.claude/settings.local.json
+.claude/launch.json
+
+# dati di Sinapsi creati nei progetti
+.sinapsi/

@@ -1,0 +1,101 @@
+{
+  "nome": "Sinapsi HQ",
+  "capo": { "id": "capo", "nome": "Il Capo", "ruolo": "Direttore (la chat che apre Sinapsi)" },
+  "aree": [
+    { "id": "digitale",   "nome": "Area Digitale" },
+    { "id": "elettronica", "nome": "Area Elettronica" },
+    { "id": "meccanica",  "nome": "Area Meccanica" },
+    { "id": "scienza",    "nome": "Area Scienza & Ricerca" },
+    { "id": "qualita",    "nome": "Area Qualità & Documentazione" }
+  ],
+  "reparti": [
+    { "id": "software", "area": "digitale", "nome": "Sviluppo Software", "colore": "#8b5cf6",
+      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Software" },
+      "impiegati": [
+        { "agente": "sinapsi-dev-embedded", "nome": "Sviluppatore C embedded", "modello": "sonnet", "effort": "high", "mansione": "Firmware C/C++ per microcontrollori: driver, ISR, RTOS, bootloader. Non script né tool PC (→ applicativo)." },
+        { "agente": "sinapsi-dev-app", "nome": "Sviluppatore applicativo", "modello": "sonnet", "effort": "medium", "mansione": "Script, tool di supporto, applicazioni desktop, automazioni. Non firmware (→ embedded), non siti (→ web)." },
+        { "agente": "sinapsi-architetto-software", "nome": "Architetto software", "modello": "opus", "effort": "medium", "mansione": "Architettura, interfacce, piani di refactoring, scelte tecniche." }
+      ] },
+    { "id": "web", "area": "digitale", "nome": "Sviluppo Web", "colore": "#3b82f6",
+      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Web" },
+      "impiegati": [
+        { "agente": "sinapsi-dev-frontend", "nome": "Sviluppatore siti e frontend", "modello": "sonnet", "effort": "medium", "mansione": "Siti, pagine, frontend responsive e accessibili." },
+        { "agente": "sinapsi-dev-backend", "nome": "Sviluppatore backend e API", "modello": "sonnet", "effort": "medium", "mansione": "API, database, autenticazione, deploy." }
+      ] },
+    { "id": "grafica", "area": "digitale", "nome": "Grafica & UX", "colore": "#d946ef",
+      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Grafica" },
+      "impiegati": [
+        { "agente": "sinapsi-designer-ui", "nome": "Designer UI/UX", "modello": "sonnet", "effort": "medium", "mansione": "Interfacce, design system, layout, prototipi HTML/CSS. Non codice di produzione (→ frontend), non loghi (→ grafico)." },
+        { "agente": "sinapsi-grafico", "nome": "Grafico visual", "modello": "sonnet", "effort": "medium", "mansione": "Loghi, icone, SVG, illustrazioni, materiali tecnici e commerciali." }
+      ] },
+    { "id": "reverse", "area": "digitale", "nome": "Reverse Engineering", "colore": "#f43f5e",
+      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Reverse" },
+      "impiegati": [
+        { "agente": "sinapsi-reverse-firmware", "nome": "Reverse engineer", "modello": "opus", "effort": "high", "mansione": "Firmware, binari, formati di file: disassemblaggio e ricostruzione. Non diagnosi di guasti con sorgente (→ analista guasti)." },
+        { "agente": "sinapsi-analista-protocolli", "nome": "Analista protocolli", "modello": "sonnet", "effort": "medium", "mansione": "Decodifica catture UART, I2C, SPI, CAN, Modbus, Ethernet." }
+      ] },
+    { "id": "schematici", "area": "elettronica", "nome": "Schede · Schematici", "colore": "#facc15",
+      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Schematici" },
+      "impiegati": [
+        { "agente": "sinapsi-progettista-schematici", "nome": "Progettista schematici", "modello": "opus", "effort": "medium", "mansione": "Circuiti di alimentazione, analogici, digitali, interfacce e protezioni. Non layout (→ PCB), non ricerche di mercato (→ selezione componenti)." }
+      ] },
+    { "id": "pcb", "area": "elettronica", "nome": "Schede · PCB", "colore": "#16a34a",
+      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo PCB" },
+      "impiegati": [
+        { "agente": "sinapsi-progettista-pcb", "nome": "Progettista PCB", "modello": "sonnet", "effort": "high", "mansione": "Layout, stackup, impedenze, EMC, termica, DFM, Gerber." }
+      ] },
+    { "id": "ingegneria", "area": "elettronica", "nome": "Ufficio Ingegneria", "colore": "#f97316",
+      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Ingegneria" },
+      "impiegati": [
+        { "agente": "sinapsi-ingegnere-calcoli", "nome": "Ingegnere calcoli", "modello": "opus", "effort": "medium", "mansione": "Dimensionamenti elettrici e termici, perdite, filtri, worst-case. Non simulazioni di campo (→ fisico)." },
+        { "agente": "sinapsi-selezione-componenti", "nome": "Selezione componenti", "modello": "sonnet", "effort": "medium", "mansione": "Scelta parametrica, disponibilità, obsolescenza, alternative, BOM." }
+      ] },
+    { "id": "diagnostica", "area": "elettronica", "nome": "Diagnostica & Guasti", "colore": "#fb7185",
+      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Diagnostica" },
+      "impiegati": [
+        { "agente": "sinapsi-analista-guasti", "nome": "Analista guasti", "modello": "opus", "effort": "high", "mansione": "Crash, log seriali, dump, sintomi hardware: ipotesi e verifiche, con il sorgente disponibile." }
+      ] },
+    { "id": "normative", "area": "elettronica", "nome": "Normative & Certificazioni", "colore": "#94a3b8",
+      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Normative" },
+      "impiegati": [
+        { "agente": "sinapsi-consulente-normative", "nome": "Consulente normative", "modello": "sonnet", "effort": "medium", "mansione": "Marcatura CE, EMC, LVD, RED, RoHS, fascicolo tecnico, piani di prova." }
+      ] },
+    { "id": "disegno", "area": "meccanica", "nome": "Disegno Meccanico", "colore": "#2dd4bf",
+      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Disegno" },
+      "impiegati": [
+        { "agente": "sinapsi-disegnatore-meccanico", "nome": "Disegnatore meccanico", "modello": "sonnet", "effort": "medium", "mansione": "Disegni 2D/3D da codice (OpenSCAD, CadQuery, DXF), contenitori, quotature." }
+      ] },
+    { "id": "precisione", "area": "meccanica", "nome": "Meccanica di Precisione", "colore": "#a3e635",
+      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Precisione" },
+      "impiegati": [
+        { "agente": "sinapsi-meccanica-precisione", "nome": "Progettista meccanica di precisione", "modello": "opus", "effort": "medium", "mansione": "Accoppiamenti ISO 286, GD&T, catene di tolleranze, materiali, lavorazioni." }
+      ] },
+    { "id": "cablaggi", "area": "meccanica", "nome": "Cablaggi Industriali", "colore": "#f59e0b",
+      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Cablaggi" },
+      "impiegati": [
+        { "agente": "sinapsi-progettista-cablaggi", "nome": "Progettista cablaggi", "modello": "sonnet", "effort": "medium", "mansione": "Schemi elettrici di quadro, liste cavi, morsettiere, sezioni, connettori." }
+      ] },
+    { "id": "ricerca", "area": "scienza", "nome": "Ricerca & Analisi", "colore": "#22d3ee",
+      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Ricerca" },
+      "impiegati": [
+        { "agente": "sinapsi-esploratore", "nome": "Esploratore codice", "modello": "haiku", "effort": "medium", "mansione": "Trova file, funzioni, chiamate e dipendenze nel codice locale. Sola lettura, niente web (→ documentalista)." },
+        { "agente": "sinapsi-documentalista", "nome": "Ricercatore documentazione", "modello": "sonnet", "effort": "medium", "mansione": "Datasheet, documentazione e fonti online, con citazioni. Non esplora il codice locale (→ esploratore)." }
+      ] },
+    { "id": "fisica", "area": "scienza", "nome": "Fisica & Simulazione", "colore": "#6366f1",
+      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Fisica" },
+      "impiegati": [
+        { "agente": "sinapsi-fisico", "nome": "Fisico e simulazione", "modello": "opus", "effort": "medium", "mansione": "Modelli fisici e simulazioni numeriche: EM, termica, dinamica, segnali." }
+      ] },
+    { "id": "qualita", "area": "qualita", "nome": "Test & Qualità", "colore": "#34d399",
+      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Qualità" },
+      "impiegati": [
+        { "agente": "sinapsi-tester", "nome": "Tester", "modello": "haiku", "effort": "low", "mansione": "Compila, lancia i test, riporta errori in forma compatta. Non legge il codice per trovare bug (→ revisore)." },
+        { "agente": "sinapsi-revisore", "nome": "Revisore codice", "modello": "sonnet", "effort": "medium", "mansione": "Code review mirata ai bug reali, con riferimenti file:riga." }
+      ] },
+    { "id": "documentazione", "area": "qualita", "nome": "Documentazione", "colore": "#e5e7eb",
+      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Documentazione" },
+      "impiegati": [
+        { "agente": "sinapsi-redattore", "nome": "Redattore tecnico", "modello": "sonnet", "effort": "low", "mansione": "README, manuali, report, changelog, commenti." }
+      ] }
+  ]
+}

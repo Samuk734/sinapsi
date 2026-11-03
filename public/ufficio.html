@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sinapsi · Ufficio</title>
+  <link rel="stylesheet" href="hud.css">
+  <style>
+    html, body { background: #120f1d; }
+    .nuvola { pointer-events: auto; cursor: pointer; max-width: 210px; display: flex; gap: 6px; align-items: center; transform: translateY(-4px);
+      font: 600 11px var(--sans); color: #111827; background: rgba(255,255,255,.94); padding: 5px 10px 5px 8px; border-radius: 12px;
+      border: 2px solid var(--c); box-shadow: 0 6px 20px rgba(0,0,0,.35); white-space: nowrap; position: relative; }
+    .nuvola::after { content: ""; position: absolute; left: 50%; bottom: -6px; width: 9px; height: 9px; background: #fff; border-right: 2px solid var(--c); border-bottom: 2px solid var(--c); transform: translateX(-50%) rotate(45deg); }
+    .nuvola .tx { overflow: hidden; text-overflow: ellipsis; }
+    .nuvola .pt { display: inline-flex; gap: 2px; flex: none; }
+    .nuvola .pt i { width: 4px; height: 4px; border-radius: 50%; background: var(--c); animation: salta 1s infinite; }
+    .nuvola .pt i:nth-child(2) { animation-delay: .15s; } .nuvola .pt i:nth-child(3) { animation-delay: .3s; }
+    @keyframes salta { 50% { transform: translateY(-3px); opacity: .5; } }
+    .timbro { font: 700 11px var(--mono); color: #052e16; background: #4ade80; padding: 3px 8px; border-radius: 6px; box-shadow: 0 0 16px #4ade80; animation: sale 1.7s ease-out forwards; white-space: nowrap; }
+    .timbro.uscita { background: #fbbf24; color: #3b2300; box-shadow: 0 0 16px #fbbf24; }
+    @keyframes sale { to { transform: translateY(-30px); opacity: 0; } }
+    .perc { font: 800 10px var(--mono); color: #fff; background: var(--m); padding: 2px 6px; border-radius: 5px; box-shadow: 0 0 10px var(--m); }
+    .insegna { pointer-events: auto; cursor: pointer; font: 800 10px var(--mono); letter-spacing: .18em; text-transform: uppercase; color: #fff; padding: 5px 10px;
+      background: color-mix(in srgb, var(--c) 55%, rgba(10,12,20,.75)); border: 1px solid color-mix(in srgb, var(--c) 80%, #fff); white-space: nowrap; box-shadow: 0 4px 16px rgba(0,0,0,.4); }
+    .insegna:hover { background: var(--c); }
+    .viste { display: flex; gap: 4px; padding: 5px; }
+  </style>
+  <script type="importmap">
+    { "imports": { "three": "/vendor/three/build/three.module.js", "three/addons/": "/vendor/three/examples/jsm/" } }
+  </script>
+</head>
+<body class="senza-destra">
+  <div id="scena"></div>
+  <header class="hud-top">
+    <div class="logo pannello"><span class="nucleo"></span><b>SINAPSI</b><small>UFFICIO</small></div>
+    <div id="metriche" class="metriche pannello"></div>
+    <nav class="azioni pannello">
+      <button id="bFlusso" class="on">Flusso<kbd>L</kbd></button>
+      <button id="bRoadmap">Roadmap<kbd>R</kbd></button>
+      <button data-vista="panoramica">Panoramica</button>
+      <button data-vista="hall">Hall</button>
+      <button data-vista="direzione">Direzione</button>
+      <button id="bCammina">Cammina<kbd>F</kbd></button>
+      <button id="bDemo">▶ Demo</button>
+      <a class="vai" href="neurale.html">Rete ⇄</a>
+    </nav>
+  </header>
+  <div id="richiesta" class="richiesta" style="opacity:0"></div>
+
+  <aside class="coscienza pannello">
+    <h3 class="tit">Flusso di coscienza <span><span id="ritmo"></span><button id="chiudiFlusso" class="mini-btn" title="Chiudi (L)">–</button></span></h3>
+    <div id="coscienza"></div>
+  </aside>
+  <button id="apriFlusso" class="linguetta sx">Flusso di coscienza</button>
+
+  <aside id="destra" class="destra pannello">
+    <div class="schede">
+      <button data-tab="roadmap" class="on">Roadmap</button>
+      <button data-tab="dettaglio">Dettaglio</button>
+      <button class="chiudi-destra" title="Chiudi (R)">✕</button>
+    </div>
+    <div id="roadmap" class="corpo"></div>
+    <div id="dettaglio" class="corpo nascosto"></div>
+  </aside>
+  <button id="apriDestra" class="linguetta dx">Roadmap</button>
+
+  <footer id="ticker" class="ticker pannello"></footer>
+  <script>try { localStorage.setItem('sinapsi.vista', 'ufficio'); } catch {}</script>
+  <script type="module" src="ufficio.js"></script>
+</body>
+</html>

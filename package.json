@@ -1,0 +1,19 @@
+{
+  "name": "sinapsi",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Azienda di agenti specializzati per Claude Code, con dashboard 3D dal vivo: rete neurale e ufficio",
+  "type": "module",
+  "license": "MIT",
+  "repository": "github:Samuk734/sinapsi",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node bin/sinapsi.js avvia --apri",
+    "demo": "node server/server.js --demo",
+    "build": "node scripts/build.js",
+    "test": "node scripts/build.js --check && node scripts/test.js"
+  },
+  "dependencies": {
+    "three": "0.170.0"
+  }
+}

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sinapsi · Rete neurale</title>
+  <link rel="stylesheet" href="hud.css">
+  <script type="importmap">
+    { "imports": { "three": "/vendor/three/build/three.module.js", "three/addons/": "/vendor/three/examples/jsm/" } }
+  </script>
+</head>
+<body class="senza-destra">
+  <div id="scena"></div>
+  <header class="hud-top">
+    <div class="logo pannello"><span class="nucleo"></span><b>SINAPSI</b><small>RETE NEURALE</small></div>
+    <div id="metriche" class="metriche pannello"></div>
+    <nav class="azioni pannello">
+      <button id="bFlusso" class="on">Flusso<kbd>L</kbd></button>
+      <button id="bRoadmap">Roadmap<kbd>R</kbd></button>
+      <button id="bOrbita" class="on">Orbita</button>
+      <button id="bVolo">Volo<kbd>F</kbd></button>
+      <button id="bCinema">Cinematica<kbd>C</kbd></button>
+      <button id="bDemo">▶ Demo</button>
+      <a class="vai" href="ufficio.html">Ufficio ⇄</a>
+    </nav>
+  </header>
+  <div id="richiesta" class="richiesta" style="opacity:0"></div>
+
+  <aside class="coscienza pannello">
+    <h3 class="tit">Flusso di coscienza <span><span id="ritmo"></span><button id="chiudiFlusso" class="mini-btn" title="Chiudi (L)">–</button></span></h3>
+    <div id="coscienza"></div>
+  </aside>
+  <button id="apriFlusso" class="linguetta sx">Flusso di coscienza</button>
+
+  <aside id="destra" class="destra pannello">
+    <div class="schede">
+      <button data-tab="roadmap" class="on">Roadmap</button>
+      <button data-tab="dettaglio">Dettaglio</button>
+      <button class="chiudi-destra" title="Chiudi (R)">✕</button>
+    </div>
+    <div id="roadmap" class="corpo"></div>
+    <div id="dettaglio" class="corpo nascosto"></div>
+  </aside>
+  <button id="apriDestra" class="linguetta dx">Roadmap</button>
+
+  <footer id="ticker" class="ticker pannello"></footer>
+  <div id="mirino" class="mirino nascosto"></div>
+  <script>try { localStorage.setItem('sinapsi.vista', 'neurale'); } catch {}</script>
+  <script type="module" src="neurale.js"></script>
+</body>
+</html>
