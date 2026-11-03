@@ -52,7 +52,34 @@ Ogni impiegato chiude il lavoro con una **busta** che contiene esito, sintesi e 
 
 ## Installazione
 
-Servono **[Claude Code](https://code.claude.com)** e **Node.js 20** o successivo.
+### Requisiti
+
+| Cosa | Versione | A cosa serve |
+|---|---|---|
+| **[Claude Code](https://code.claude.com)** | 2.1.292 o successiva (provato con la 2.1.317) | Il Capo e gli impiegati. Dalla 2.1.292 si può scegliere l'effort a ogni chiamata. |
+| **[Node.js](https://nodejs.org)** con npm | 20 o successiva (npm è incluso nell'installer) | Il server locale della dashboard e i sensori. |
+| **[Git](https://git-scm.com)** | qualsiasi recente | Claude Code lo usa per scaricare il plugin da GitHub. |
+| **Browser con WebGL 2** | Chrome, Edge o Firefox recenti | La dashboard 3D. Basta una grafica integrata; l'ufficio, con ombre e occlusione ambientale, è la vista più pesante. |
+| **Connessione a internet** | solo al primo avvio | Scarica three.js da npm, circa 30 MB. |
+| **Porta 7420 libera** | | La dashboard su `http://localhost:7420`. Si cambia con la variabile `SINAPSI_PORT`. |
+
+**Modelli**: per usare tutto l'organico il tuo account Claude deve avere accesso a Haiku, Sonnet, Opus e Fable. Il consumo resta quello del tuo piano: la dashboard non fa chiamate al modello.
+
+**Sistema operativo**: provato su Windows 10. macOS e Linux sono supportati dal codice ma non ancora collaudati.
+
+Per controllare cosa hai già, in un terminale:
+
+```bash
+claude --version
+```
+```bash
+node --version
+```
+```bash
+git --version
+```
+
+### Installare il plugin
 
 In una sessione di Claude Code:
 
@@ -165,7 +192,7 @@ Sinapsi is a **Claude Code plugin** that turns your chat into "the Boss" of a co
 
 The UI and the prompts are in Italian.
 
-Install it with `/plugin marketplace add Samuk734/sinapsi`, then `/plugin install sinapsi@sinapsi`, and say "apri Sinapsi". To try the dashboard without Claude: `npm install && npm run demo`.
+Requirements: Claude Code 2.1.292 or later, Node.js 20 or later with npm, Git, a WebGL 2 browser, and internet access on the first launch. Install it with `/plugin marketplace add Samuk734/sinapsi`, then `/plugin install sinapsi@sinapsi`, and say "apri Sinapsi". To try the dashboard without Claude: `npm install && npm run demo`.
 
 ## Licenza
 
