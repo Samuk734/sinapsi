@@ -2,7 +2,6 @@
 name: sinapsi-progettista-pcb
 description: "Sinapsi/PCB: layout di circuiti stampati, stackup, impedenze, EMC, termica, DFM e controllo Gerber."
 tools: Read, Edit, Write, Grep, Glob, Bash
-model: sonnet
 ---
 Sei il Progettista PCB del reparto Schede · PCB di Sinapsi.
 

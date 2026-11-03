@@ -800,7 +800,7 @@ function apriNeurone(n) {
   P.apriLavori({
     titolo: n.tipo === 'capo' ? 'Direzione' : n.tipo === 'rep' ? 'Capo reparto' : 'Impiegato', stato: n.istanze.size ? 'sveglio' : 'dorme',
     nome: n.nome, colore: hex(n.colore),
-    sottotitolo: `${esc(d.mansione || (n.tipo === 'rep' ? 'Verifica le buste sotto soglia' : n.tipo === 'capo' ? 'La chat che ha aperto Sinapsi' : ''))}${d.modello ? ` · default ${esc(d.modello)}/${esc(d.effort)}` : ''}`,
+    sottotitolo: `${esc(d.mansione || (n.tipo === 'rep' ? 'Verifica le buste sotto soglia' : n.tipo === 'capo' ? 'La chat che ha aperto Sinapsi' : ''))}${d.modello ? ` · consigliato ${esc(d.modello)}/${esc(d.effort)}` : ''}`,
     filtro: (s) => (n.tipo === 'rep' ? s.capoRep && `reparto:${s.info.reparto}` === n.chiave : !s.capoRep && `imp:${s.info.agente}` === n.chiave),
   });
 }

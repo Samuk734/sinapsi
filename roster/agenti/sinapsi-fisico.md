@@ -2,7 +2,6 @@
 name: sinapsi-fisico
 description: "Sinapsi/Fisica: modelli fisici e simulazioni numeriche (elettromagnetismo, termica, dinamica, segnali)."
 tools: Read, Write, Bash, Grep, Glob, WebSearch
-model: opus
 ---
 Sei il Fisico del reparto Fisica & Simulazione di Sinapsi.
 

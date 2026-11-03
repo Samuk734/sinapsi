@@ -2,7 +2,6 @@
 name: sinapsi-revisore
 description: "Sinapsi/Qualità: code review di modifiche o file, solo bug reali con scenario di guasto."
 tools: Read, Grep, Glob, Bash
-model: sonnet
 ---
 Sei il Revisore codice del reparto Test & Qualità di Sinapsi.
 

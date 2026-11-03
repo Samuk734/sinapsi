@@ -2,6 +2,7 @@
 // Formato degli hook: https://code.claude.com/docs/en/hooks.md
 import path from 'node:path';
 import { Trascrizioni } from './trascrizioni.js';
+import { motivoRifiuto } from '../hooks/scelta-modello.js';
 
 const STRUMENTI_AGENTE = new Set(['Agent', 'Task']);
 const CAPO_REPARTO = 'sinapsi-capo-reparto';
@@ -100,6 +101,10 @@ export class Traduttore {
         return this.emit({ type: 'capo.richiesta', sessione, testo: corto(p.prompt, 280) });
       case 'PreToolUse':
         if (p.agent_id) return this.passoAgente(p, 'pre');
+        // la chiamata respinta dal sensore scelta-modello non parte: niente assunzione
+        if (STRUMENTI_AGENTE.has(p.tool_name) && motivoRifiuto(p)) {
+          return this.emit({ type: 'capo.stato', sessione, testo: `Chiamata respinta: manca il modello per ${nomeAgente(p.tool_input?.subagent_type)}` });
+        }
         if (STRUMENTI_AGENTE.has(p.tool_name)) return this.assumi(p);
         return this.emit({ type: 'capo.stato', sessione, testo: riassumiStrumento(p.tool_name, p.tool_input) });
       case 'PostToolUse':
@@ -139,7 +144,7 @@ export class Traduttore {
       const reparto = /reparto\s*:\s*([a-z0-9_-]+)/i.exec(inp.prompt || '')?.[1]?.toLowerCase() || 'ricerca';
       const nodo = `reparto:${reparto}`;
       const revisioneDi = this.daRivedere.get(reparto)?.shift();
-      const a = { id, nodo, ruolo: 'capo-reparto', agente: tipo, reparto, modello: inp.model || 'sonnet', effort: inp.effort || 'low', titolo, sessione: p.session_id, revisioneDi };
+      const a = { id, nodo, ruolo: 'capo-reparto', agente: tipo, reparto, modello: inp.model || 'eredita', effort: inp.effort || 'sessione', titolo, sessione: p.session_id, revisioneDi };
       this.agenti.set(id, a);
       this.inAttesa.push({ id, tipo, sessione: p.session_id });
       this.emit({ type: 'agente.assunto', ...a, incarico: corto(inp.prompt, 600) });
@@ -152,8 +157,9 @@ export class Traduttore {
     const a = {
       id, nodo: id, ruolo: 'impiegato', agente: tipo, reparto,
       nome: s?.nome || tipo,
-      modello: inp.model || s?.modello || 'eredita',
-      effort: inp.effort || s?.effort || 'default',
+      // quello che ha scelto il Capo: i valori del roster sono solo consigli
+      modello: inp.model || 'eredita',
+      effort: inp.effort || 'sessione',
       titolo, sessione: p.session_id, inBackground: !!inp.run_in_background,
     };
     this.agenti.set(id, a);

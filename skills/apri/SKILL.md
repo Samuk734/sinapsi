@@ -12,7 +12,7 @@ Questa chat è il Capo di Sinapsi. Gli impiegati sono i subagent `sinapsi:sinaps
 Esegui `node "${CLAUDE_PLUGIN_ROOT}/bin/sinapsi.js" avvia --apri`. Al primo avvio scarica la grafica 3D e ci mette un minuto. Poi rispondi in una riga che Sinapsi è online, con l'URL. Non leggere altri file del plugin: l'organico è qui sotto.
 
 ## 2. Organico
-| Area | Reparto (id) | Impiegato | Mansione | Default |
+| Area | Reparto (id) | Impiegato | Mansione | Consigliato |
 |---|---|---|---|---|
 | Digitale | Sviluppo Software (`software`) | `sinapsi:sinapsi-dev-embedded` | Firmware C/C++ per microcontrollori: driver, ISR, RTOS, bootloader. Non script né tool PC (→ applicativo). | sonnet/high |
 | Digitale | Sviluppo Software (`software`) | `sinapsi:sinapsi-dev-app` | Script, tool di supporto, applicazioni desktop, automazioni. Non firmware (→ embedded), non siti (→ web). | sonnet/medium |
@@ -55,7 +55,7 @@ Revisore per tutti i reparti: `sinapsi:sinapsi-capo-reparto`.
 - **Seguiti sullo stesso lavoro**: riprendi l'impiegato con `SendMessage`, perché ha già il contesto.
 
 ## 4. Modello ed effort: li scegli tu, a ogni chiamata
-Passa sempre `model` ed `effort` nella chiamata all'agente.
+Gli impiegati non hanno un modello proprio: passa sempre `model` ed `effort` nella chiamata, altrimenti il sensore di Sinapsi la respinge. La colonna "Consigliato" dell'organico è solo un punto di partenza: decidi in base al compito, con questa tabella.
 
 | Lavoro | model | effort |
 |---|---|---|
@@ -94,7 +94,7 @@ Se un incarico richiederebbe uno specialista che manca, e il bisogno si ripeter�
 1. Pubblica la posizione: `node "${CLAUDE_PLUGIN_ROOT}/bin/sinapsi.js" posizione-aperta --reparto <id> --ruolo "<nome>" --motivo "<perché serve>" --modello <m>`
 2. Chiedi all'utente se vuole formarlo, e se lo vuole solo per questo progetto o per tutti.
 3. Se sì, scrivi `sinapsi-<nome>.md` in `.claude/agents/` del progetto, oppure in `~/.claude/agents/` per tutti i progetti. Il file contiene:
-   - frontmatter con `name`, `description` di una riga che inizia con `Sinapsi/<Reparto>:`, `tools` minimi e `model`;
+   - frontmatter con `name`, `description` di una riga che inizia con `Sinapsi/<Reparto>:` e `tools` minimi, senza `model` né `effort` (li scegli tu a ogni chiamata);
    - un prompt specifico e breve;
    - in coda, le sezioni "Regole di Sinapsi" e "Consegna: la busta", copiate da `${CLAUDE_PLUGIN_ROOT}/agents/sinapsi-tester.md`.
 4. Dopo pochi secondi il nuovo impiegato è disponibile, con il nome senza prefisso.

@@ -2,7 +2,6 @@
 name: sinapsi-reverse-firmware
 description: "Sinapsi/Reverse: reverse engineering di firmware, binari e formati di file (anche con IDA/REA se disponibili)."
 disallowedTools: Agent
-model: opus
 ---
 Sei il Reverse engineer del reparto Reverse Engineering di Sinapsi.
 

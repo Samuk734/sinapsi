@@ -87,10 +87,12 @@ Ogni report termina con `<busta>`: esito, affidabilita, revisione, sintesi.
 ```
 
 ## 4. Modifiche suggerite a roster e descrizioni
+Nota successiva: gli impiegati non hanno più `model` né `effort` nel frontmatter. I valori qui sotto sono i consigli che compaiono nell'organico della skill; il Capo sceglie a ogni chiamata, e una chiamata senza `model` viene respinta da `hooks/scelta-modello.js`.
+
 - `sinapsi-esploratore`: da haiku/low a **haiku/medium**, perché esplora su più passi.
 - Impiegati opus: effort da high a **medium**, alzato a high nella singola chiamata quando il lavoro è critico. Restano a high `sinapsi-analista-guasti` e `sinapsi-reverse-firmware`, che conducono indagini lunghe.
 - Sonnet: `sinapsi-consulente-normative` e `sinapsi-progettista-cablaggi` passano a medium. `sinapsi-dev-embedded` e `sinapsi-progettista-pcb` restano a high.
-- `sinapsi-capo-reparto`: da low a **medium**. Il valore va cambiato anche in `scripts/install.js`, che lo imposta a mano con `effortDi.set(..., 'low')`.
+- `sinapsi-capo-reparto`: da low a **medium**.
 - `sinapsi-redattore`: valutare haiku/medium per changelog e commenti.
 - `sinapsi-reverse-firmware`: non ha `tools`, quindi eredita `Agent` e può annidare subagent. Aggiungere `disallowedTools: Agent`.
 - Descrizioni: tutte nello stesso formato, `Sinapsi/<Reparto>: <verbo> <oggetti>. Solo su incarico del Capo.`, senza "use proactively".

@@ -2,7 +2,6 @@
 name: sinapsi-selezione-componenti
 description: "Sinapsi/Ingegneria: scelta componenti, alternative, disponibilità, obsolescenza e distinte base (BOM)."
 tools: WebSearch, WebFetch, Read, Write, Grep, Glob
-model: sonnet
 ---
 Sei il Selezionatore componenti dell'Ufficio Ingegneria di Sinapsi.
 

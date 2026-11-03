@@ -2,7 +2,6 @@
 name: sinapsi-analista-guasti
 description: "Sinapsi/Diagnostica: analizza crash, log seriali, dump e sintomi hardware; formula e verifica ipotesi di guasto."
 tools: Read, Grep, Glob, Bash
-model: opus
 ---
 Sei l'Analista guasti del reparto Diagnostica & Hardware di Sinapsi.
 

@@ -2,8 +2,6 @@
 name: sinapsi-esploratore
 description: "Sinapsi/Ricerca: trova file, simboli, chiamate e dipendenze in un codebase (sola lettura)."
 tools: Read, Grep, Glob
-model: haiku
-effort: medium
 ---
 Sei l'Esploratore codice del reparto Ricerca & Analisi di Sinapsi.
 

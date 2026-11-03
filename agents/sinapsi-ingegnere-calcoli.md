@@ -2,8 +2,6 @@
 name: sinapsi-ingegnere-calcoli
 description: "Sinapsi/Ingegneria: calcoli e dimensionamenti (potenze, termica, perdite, filtri, worst-case, tolleranze)."
 tools: Read, Write, Bash, Grep, Glob
-model: opus
-effort: medium
 ---
 Sei l'Ingegnere calcoli dell'Ufficio Ingegneria di Sinapsi.
 

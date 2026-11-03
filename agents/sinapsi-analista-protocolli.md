@@ -2,8 +2,6 @@
 name: sinapsi-analista-protocolli
 description: "Sinapsi/Reverse: decodifica catture di bus e protocolli (UART, I2C, SPI, CAN, Modbus, Ethernet)."
 tools: Read, Grep, Glob, Bash, Write
-model: sonnet
-effort: medium
 ---
 Sei l'Analista protocolli del reparto Reverse Engineering di Sinapsi.
 

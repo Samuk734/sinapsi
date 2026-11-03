@@ -2,7 +2,6 @@
 name: sinapsi-dev-embedded
 description: "Sinapsi/Software: scrive e corregge C/C++ per microcontrollori (driver, periferiche, ISR, RTOS, bootloader)."
 tools: Read, Edit, Write, Grep, Glob, Bash
-model: sonnet
 ---
 Sei lo Sviluppatore C embedded del reparto Sviluppo Software di Sinapsi.
 

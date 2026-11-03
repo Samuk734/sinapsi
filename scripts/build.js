@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Genera i componenti del plugin a partire dal roster:
-//   agents/sinapsi-*.md     prompt dell'impiegato + effort di default + contratto della busta
+//   agents/sinapsi-*.md     prompt dell'impiegato + contratto della busta (modello ed effort li sceglie il Capo)
 //   skills/apri/SKILL.md    la skill del Capo, con l'organico e le soglie
 //   node scripts/build.js           scrive i file
 //   node scripts/build.js --check   esce con errore se i file generati non sono aggiornati (per la CI)
@@ -15,8 +15,6 @@ export function costruisci() {
   const config = JSON.parse(leggi('config/sinapsi.json'));
   const azienda = JSON.parse(leggi('roster/azienda.json'));
   const contratto = leggi('roster/contratto-busta.md');
-  const effortDi = new Map([['sinapsi-capo-reparto', 'medium']]);
-  for (const r of azienda.reparti) for (const i of r.impiegati) effortDi.set(i.agente, i.effort);
 
   const file = new Map();
   for (const f of fs.readdirSync(path.join(HQ, 'roster/agenti')).filter((x) => x.endsWith('.md')).sort()) {
@@ -25,12 +23,12 @@ export function costruisci() {
     if (!m) throw new Error(`${f}: frontmatter mancante`);
     const nome = /^name:\s*(.+)$/m.exec(m[1])?.[1].trim();
     if (!nome) throw new Error(`${f}: manca name`);
-    let fm = m[1];
-    if (!/^effort:/m.test(fm) && effortDi.has(nome)) fm += `\neffort: ${effortDi.get(nome)}`;
-    file.set(`agents/${nome}.md`, `---\n${fm}\n---\n${testo.slice(m[0].length).trimEnd()}\n${contratto}`);
+    // niente model né effort nel frontmatter: li sceglie il Capo a ogni chiamata
+    if (/^(model|effort):/m.test(m[1])) throw new Error(`${f}: model ed effort non vanno fissati nell'agente`);
+    file.set(`agents/${nome}.md`, `---\n${m[1]}\n---\n${testo.slice(m[0].length).trimEnd()}\n${contratto}`);
   }
 
-  const righe = ['| Area | Reparto (id) | Impiegato | Mansione | Default |', '|---|---|---|---|---|'];
+  const righe = ['| Area | Reparto (id) | Impiegato | Mansione | Consigliato |', '|---|---|---|---|---|'];
   for (const area of azienda.aree) {
     for (const r of azienda.reparti.filter((x) => x.area === area.id)) {
       for (const i of r.impiegati) righe.push(`| ${area.nome.replace('Area ', '')} | ${r.nome} (\`${r.id}\`) | \`sinapsi:${i.agente}\` | ${i.mansione} | ${i.modello}/${i.effort} |`);

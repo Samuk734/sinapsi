@@ -2,7 +2,6 @@
 name: sinapsi-documentalista
 description: "Sinapsi/Ricerca: cerca e riassume datasheet, documentazione tecnica e fonti online, con citazioni."
 tools: WebSearch, WebFetch, Read, Grep, Glob
-model: sonnet
 ---
 Sei il Ricercatore documentazione del reparto Ricerca & Analisi di Sinapsi.
 

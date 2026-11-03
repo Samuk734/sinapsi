@@ -11,7 +11,7 @@ Il lavoro di 25 agenti, divisi in 16 reparti, si vede mentre accade, come **rete
 
 [![Test](https://github.com/Samuk734/sinapsi/actions/workflows/test.yml/badge.svg)](https://github.com/Samuk734/sinapsi/actions/workflows/test.yml)
 ![Plugin Claude Code](https://img.shields.io/badge/Claude%20Code-plugin-d97757)
-![Versione](https://img.shields.io/badge/versione-0.1.0%20beta-7dd3fc)
+![Versione](https://img.shields.io/badge/versione-0.1.1%20beta-7dd3fc)
 [![Licenza MIT](https://img.shields.io/badge/licenza-MIT-34d399)](LICENSE)
 ![Lingua](https://img.shields.io/badge/lingua-italiano-ffcf73)
 
@@ -24,7 +24,7 @@ Il lavoro di 25 agenti, divisi in 16 reparti, si vede mentre accade, come **rete
 Sinapsi è un **plugin per Claude Code** che contiene tre cose:
 
 - **La skill del Capo** (`/sinapsi:apri`). Trasforma la chat in un direttore che delega con criterio: chi chiamare, con quale modello (Haiku, Sonnet, Opus, Fable) e con quale effort.
-- **25 impiegati**, cioè subagent con prompt, strumenti e modello pensati per un mestiere preciso. Coprono software, web, grafica, reverse engineering, schematici, PCB, calcoli, diagnostica, normative CE, disegno meccanico, meccanica di precisione, cablaggi industriali, fisica, test e documentazione.
+- **25 impiegati**, cioè subagent con prompt e strumenti pensati per un mestiere preciso. Non hanno un modello fisso: lo sceglie il Capo a ogni chiamata, insieme all'effort. Coprono software, web, grafica, reverse engineering, schematici, PCB, calcoli, diagnostica, normative CE, disegno meccanico, meccanica di precisione, cablaggi industriali, fisica, test e documentazione.
 - **Una dashboard locale in 3D**, alimentata dagli hook di Claude Code. Mostra ogni pensiero, azione e consegna **senza consumare token**.
 
 Ogni impiegato chiude il lavoro con una **busta** che contiene esito, sintesi e **indice di affidabilità**. Le buste solide vanno dritte al Capo; quelle deboli passano prima dal capo reparto, che le verifica. Al Capo arriva solo la sintesi: il lavoro sporco resta fuori dal suo contesto.
@@ -119,7 +119,8 @@ flowchart LR
 ```
 
 - **Il Capo decide** con le regole della skill: quando delegare e quando fare da solo, quanti agenti in parallelo, quale modello ed effort, come salire di livello se un tentativo fallisce. Le regole vengono dalle linee guida di Anthropic e da progetti pubblici: vedi [docs/ricerca-routing.md](docs/ricerca-routing.md).
-- **Gli hook non bloccano mai Claude**: sono asincroni, girano in background e, se la dashboard è chiusa, terminano subito.
+- **Il modello lo sceglie davvero il Capo**: gli impiegati non ne hanno uno proprio, e un sensore respinge ogni chiamata a un impiegato Sinapsi senza `model`. Il Capo riceve il motivo e ripete la chiamata scegliendo.
+- **I sensori della dashboard non rallentano Claude**: sono asincroni, girano in background e, se la dashboard è chiusa, terminano subito.
 - **Il pensiero** degli impiegati si legge dalle loro trascrizioni locali, quando Claude Code lo registra.
 
 ### Il risparmio di token, onestamente
@@ -147,7 +148,7 @@ La dashboard mostra i token di lavoro e quanti sono rimasti **fuori dal contesto
 | **Scienza** | Ricerca & Analisi (esploratore codice, documentalista) · Fisica & Simulazione |
 | **Qualità** | Test & Qualità (tester, revisore) · Documentazione |
 
-Ogni reparto ha un **capo reparto** che verifica le buste sotto soglia. Organico, modelli ed effort predefiniti stanno in [`roster/azienda.json`](roster/azienda.json); i prompt in [`roster/agenti/`](roster/agenti).
+Ogni reparto ha un **capo reparto** che verifica le buste sotto soglia. L'organico sta in [`roster/azienda.json`](roster/azienda.json), con il modello e l'effort consigliati per ogni impiegato: sono un punto di partenza per il Capo, non valori fissi. I prompt sono in [`roster/agenti/`](roster/agenti).
 
 **Posizioni aperte.** Quando manca uno specialista che servirebbe spesso, il Capo pubblica una posizione aperta nella dashboard. Se sei d'accordo, lo forma: scrive un nuovo impiegato nel progetto, oppure in `~/.claude/agents/` per averlo in tutti i progetti.
 
@@ -159,7 +160,7 @@ Ogni reparto ha un **capo reparto** che verifica le buste sotto soglia. Organico
 
 ## Stato del progetto
 
-**0.1.0 beta.** Cosa è verificato:
+**0.1.1 beta.** Cosa è verificato:
 - la logica è coperta da test: traduzione degli hook, instradamento delle buste, componenti del plugin;
 - il plugin supera `claude plugin validate`;
 - le due viste girano sul simulatore.
@@ -176,7 +177,7 @@ Ancora da fare:
 .claude-plugin/   manifest del plugin e del marketplace, icona
 skills/apri/      la skill del Capo           (generata da roster/skill.template.md)
 agents/           i 25 impiegati              (generati da roster/agenti + contratto della busta)
-hooks/            hooks.json ed emit.js, i sensori
+hooks/            i sensori: emit.js (verso la dashboard) e scelta-modello.js (niente chiamate senza modello)
 server/           server locale, traduttore degli hook, lettore delle trascrizioni, simulatore
 public/           la dashboard: rete neurale e ufficio (three.js)
 bin/sinapsi.js    CLI: avvia, stato, demo, posizione-aperta
@@ -188,7 +189,7 @@ docs/             architettura e ricerca sulle regole di scelta
 
 ## In English
 
-Sinapsi is a **Claude Code plugin** that turns your chat into "the Boss" of a company of 25 specialized subagents across 16 departments. The departments cover software, web, UX, reverse engineering, schematics, PCB, engineering calculations, diagnostics, CE compliance, mechanical design, precision mechanics, industrial wiring, physics, QA and docs. For each task the Boss picks the agent, the model and the effort. Every step streams, at zero token cost, into a local 3D dashboard that you can view as a **neural network** or as a **themed office** with little Claude employees. Agents hand back an "envelope" with a self-reported reliability score; weak ones go through a department reviewer first.
+Sinapsi is a **Claude Code plugin** that turns your chat into "the Boss" of a company of 25 specialized subagents across 16 departments. The departments cover software, web, UX, reverse engineering, schematics, PCB, engineering calculations, diagnostics, CE compliance, mechanical design, precision mechanics, industrial wiring, physics, QA and docs. For each task the Boss picks the agent, the model and the effort: agents have no fixed model, and a hook rejects any call to a Sinapsi agent that doesn't pass one. Every step streams, at zero token cost, into a local 3D dashboard that you can view as a **neural network** or as a **themed office** with little Claude employees. Agents hand back an "envelope" with a self-reported reliability score; weak ones go through a department reviewer first.
 
 The UI and the prompts are in Italian.
 

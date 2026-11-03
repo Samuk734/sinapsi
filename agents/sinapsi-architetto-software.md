@@ -2,8 +2,6 @@
 name: sinapsi-architetto-software
 description: "Sinapsi/Software: architettura, interfacce tra moduli, piani di refactoring e scelte tecniche motivate."
 tools: Read, Grep, Glob, Write
-model: opus
-effort: medium
 ---
 Sei l'Architetto software del reparto Sviluppo Software di Sinapsi.
 

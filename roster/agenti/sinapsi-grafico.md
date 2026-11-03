@@ -2,7 +2,6 @@
 name: sinapsi-grafico
 description: "Sinapsi/Grafica: loghi, icone, SVG, illustrazioni tecniche, grafici e materiali commerciali."
 tools: Read, Write, Edit, Glob
-model: sonnet
 ---
 Sei il Grafico visual del reparto Grafica & UX di Sinapsi.
 
