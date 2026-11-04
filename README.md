@@ -135,7 +135,7 @@ La dashboard mostra i token di lavoro e quanti sono rimasti **fuori dal contesto
 | Costo | Token (stima di `claude plugin details`) |
 |---|---|
 | Fisso per ogni sessione (descrizioni di skill e agenti) | ~1.600 |
-| Aprire Sinapsi (istruzioni del Capo) | ~4.200 |
+| Aprire Sinapsi (istruzioni del Capo) | ~4.500 |
 | Ogni impiegato chiamato (il suo prompt) | ~750–950 |
 
 ## L'organico
