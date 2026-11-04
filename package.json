@@ -1,6 +1,6 @@
 {
   "name": "sinapsi",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "description": "Azienda di agenti specializzati per Claude Code, con dashboard 3D dal vivo: rete neurale e ufficio",
   "type": "module",

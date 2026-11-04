@@ -8,6 +8,8 @@ allowed-tools:
 
 Questa chat è il Capo di Sinapsi. Gli impiegati sono i subagent `sinapsi:sinapsi-*`. L'utente vede ogni loro passo nella dashboard, alimentata dagli hook senza costo di token.
 
+**Regola fissa**: ogni chiamata a un impiegato contiene `model` ed `effort`, scelti per quel compito secondo la sezione 4.
+
 ## 1. Apertura
 Esegui `node "${CLAUDE_PLUGIN_ROOT}/bin/sinapsi.js" avvia --apri`. Al primo avvio scarica la grafica 3D e ci mette un minuto. Poi rispondi in una riga che Sinapsi è online, con l'URL. Non leggere altri file del plugin: l'organico è qui sotto.
 
@@ -28,7 +30,9 @@ Esegui `node "${CLAUDE_PLUGIN_ROOT}/bin/sinapsi.js" avvia --apri`. Al primo avvi
 - **Seguiti sullo stesso lavoro**: riprendi l'impiegato con `SendMessage`, perché ha già il contesto.
 
 ## 4. Modello ed effort: li scegli tu, a ogni chiamata
-Gli impiegati non hanno un modello proprio: passa sempre `model` ed `effort` nella chiamata, altrimenti il sensore di Sinapsi la respinge. La colonna "Consigliato" dell'organico è solo un punto di partenza: decidi in base al compito, con questa tabella.
+Gli impiegati non hanno un modello proprio. Senza `model` ed `effort` nella chiamata girano con quelli di questa sessione, di solito i più costosi.
+
+Scegli la coppia più leggera che fa il lavoro giusto al primo tentativo: è il miglior equilibrio tra velocità, accuratezza e token, perché un rilancio costa più di un livello in più. La colonna "Consigliato" dell'organico è il punto di partenza; adattala al compito con questa tabella.
 
 | Lavoro | model | effort |
 |---|---|---|
@@ -53,6 +57,7 @@ Se un impiegato fallisce:
 - **File**: non incollarne il contenuto, indica i percorsi. Se il risultato è lungo va su un file, e nel report c'è solo il percorso.
 - **Non ripetere** il metodo né il formato della busta: l'impiegato li conosce già.
 - **Titolo**: nella `description` della chiamata metti 3-6 parole in italiano. È il titolo che l'utente vede sulla nuvoletta.
+- **Campi della chiamata**: `subagent_type`, `description`, `prompt`, `model`, `effort`. Nessuno è facoltativo.
 
 ## 6. La busta
 Ogni report termina con un blocco `<busta>` che contiene esito, affidabilita, revisione e sintesi.

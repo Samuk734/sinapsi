@@ -1,12 +1,9 @@
 {
-  "description": "Sensori di Sinapsi: inoltrano in background gli eventi di sessione, strumenti e subagent alla dashboard locale, senza bloccare Claude. L'unico sensore sincrono respinge le chiamate a un impiegato Sinapsi senza modello, perché il modello lo sceglie il Capo.",
+  "description": "Sensori di Sinapsi: inoltrano in background gli eventi di sessione, strumenti e subagent alla dashboard locale. Non bloccano mai Claude e non consumano token.",
   "hooks": {
     "SessionStart": [{ "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/emit.js\"", "async": true, "timeout": 5 }] }],
     "UserPromptSubmit": [{ "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/emit.js\"", "async": true, "timeout": 5 }] }],
-    "PreToolUse": [
-      { "matcher": "Agent|Task", "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/scelta-modello.js\"", "timeout": 5 }] },
-      { "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/emit.js\"", "async": true, "timeout": 5 }] }
-    ],
+    "PreToolUse": [{ "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/emit.js\"", "async": true, "timeout": 5 }] }],
     "PostToolUse": [{ "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/emit.js\"", "async": true, "timeout": 5 }] }],
     "SubagentStart": [{ "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/emit.js\"", "async": true, "timeout": 5 }] }],
     "SubagentStop": [{ "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/emit.js\"", "async": true, "timeout": 5 }] }],

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Collaudo della logica: server + traduttore + trascrizioni + installatore.
 // Non tocca ~/.claude: l'installatore viene provato in una cartella temporanea.
-import { spawn, spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import http from 'node:http';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -10,7 +10,6 @@ import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { leggiBusta, riassumiStrumento } from '../server/traduttore.js';
 import { costruisci } from './build.js';
-import { motivoRifiuto } from '../hooks/scelta-modello.js';
 
 const HQ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = 7499;
@@ -37,21 +36,6 @@ await prova('affidabilità fuori scala viene limitata', () => assert.equal(leggi
 await prova('riassunto strumenti', () => {
   assert.equal(riassumiStrumento('Read', { file_path: 'C:/a/b/main.c' }), 'Legge main.c');
   assert.match(riassumiStrumento('WebFetch', { url: 'https://modbus.org/x.pdf' }), /modbus\.org/);
-});
-await prova('sensore: impiegato Sinapsi senza model respinto, il resto passa', () => {
-  const chiama = (inp) => ({ tool_name: 'Agent', tool_input: inp });
-  assert.match(motivoRifiuto(chiama({ subagent_type: 'sinapsi:sinapsi-tester' })), /model/);
-  assert.match(motivoRifiuto(chiama({ subagent_type: 'sinapsi-nuovo-ruolo', model: ' ' })), /model/);
-  assert.equal(motivoRifiuto(chiama({ subagent_type: 'sinapsi:sinapsi-tester', model: 'haiku' })), null);
-  assert.equal(motivoRifiuto(chiama({ subagent_type: 'Explore' })), null);
-  assert.equal(motivoRifiuto({ tool_name: 'Bash', tool_input: { command: 'ls' } }), null);
-});
-await prova('sensore come hook: exit 2 con motivo su stderr, altrimenti exit 0', () => {
-  const hook = (payload) => spawnSync(process.execPath, [path.join(HQ, 'hooks/scelta-modello.js')], { input: payload, encoding: 'utf8' });
-  const no = hook(JSON.stringify({ tool_name: 'Agent', tool_input: { subagent_type: 'sinapsi:sinapsi-tester' } }));
-  assert.equal(no.status, 2); assert.match(no.stderr, /sinapsi:sinapsi-tester/); assert.equal(no.stdout, '');
-  assert.equal(hook(JSON.stringify({ tool_name: 'Agent', tool_input: { subagent_type: 'sinapsi:sinapsi-tester', model: 'sonnet' } })).status, 0);
-  assert.equal(hook('non è json').status, 0);
 });
 
 console.log('Catena hook → eventi');
@@ -82,8 +66,6 @@ try {
 
   await post('/hook', { ...comuni, session_id: 'altra', hook_event_name: 'PreToolUse', tool_name: 'Agent', tool_use_id: 'x', tool_input: { subagent_type: 'Explore' } });
   await post('/hook', { ...comuni, hook_event_name: 'PreToolUse', tool_name: 'Skill', tool_input: { skill: 'sinapsi' } });
-  await post('/hook', { ...comuni, hook_event_name: 'PreToolUse', tool_name: 'Agent', tool_use_id: 'toolu_senza_modello',
-    tool_input: { subagent_type: 'sinapsi:sinapsi-progettista-pcb', description: 'Senza modello', prompt: 'x' } });
   await post('/hook', { ...comuni, hook_event_name: 'PreToolUse', tool_name: 'Agent', tool_use_id: T,
     tool_input: { subagent_type: 'sinapsi:sinapsi-progettista-pcb', description: 'Rivedi lo stackup', prompt: 'Controlla board.kicad_pcb', model: 'opus', effort: 'xhigh' } });
   await post('/hook', { ...comuni, hook_event_name: 'SubagentStart', agent_id: A, agent_type: 'sinapsi:sinapsi-progettista-pcb' });
@@ -93,14 +75,16 @@ try {
   const testo = 'Piano GND tagliato sotto USB.\n<busta>\nesito: completato\naffidabilita: 0.65\nrevisione: no\nsintesi: taglio nel piano sotto le linee USB\n</busta>';
   await post('/hook', { ...comuni, hook_event_name: 'PostToolUse', tool_name: 'Agent', tool_use_id: T, tool_input: {},
     tool_response: { status: 'completed', agentId: A, content: [{ type: 'text', text: testo }], resolvedModel: 'opus', totalTokens: 6200 } });
+  await post('/hook', { ...comuni, hook_event_name: 'PreToolUse', tool_name: 'Agent', tool_use_id: 'toolu_senza_modello',
+    tool_input: { subagent_type: 'sinapsi:sinapsi-tester', description: 'Senza modello', prompt: 'x' } });
   await attesa(300);
 
   const di = (t) => eventi.filter((e) => e.type === t);
   await prova('le sessioni che non hanno aperto Sinapsi vengono ignorate', () => assert.equal(eventi.some((e) => e.sessione === 'altra' || e.id === 'x'), false));
   await prova('capo online', () => assert.equal(di('capo.online').length, 1));
-  await prova('la chiamata respinta dal sensore non assume nessuno', () => {
-    assert.equal(di('agente.assunto').some((e) => e.id === 'toolu_senza_modello'), false);
-    assert.ok(di('capo.stato').some((e) => /respinta/.test(e.testo)));
+  await prova('chiamata senza modello: la dashboard mostra eredita/sessione, non un default del roster', () => {
+    const a = di('agente.assunto').find((e) => e.id === 'toolu_senza_modello');
+    assert.equal(a?.modello, 'eredita'); assert.equal(a?.effort, 'sessione');
   });
   await prova('assunzione (nome con prefisso del plugin) con reparto, modello ed effort', () => {
     const a = di('agente.assunto')[0];
@@ -142,10 +126,11 @@ await prova('manifest e hook del plugin coerenti', () => {
   const market = JSON.parse(fs.readFileSync(path.join(HQ, '.claude-plugin/marketplace.json'), 'utf8'));
   const hooks = JSON.parse(fs.readFileSync(path.join(HQ, 'hooks/hooks.json'), 'utf8')).hooks;
   assert.equal(plugin.name, 'sinapsi'); assert.equal(market.plugins[0].name, plugin.name);
-  const emit = (ev) => hooks[ev]?.find((g) => g.hooks.some((h) => h.command.includes('emit.js')))?.hooks[0];
-  for (const ev of ['PreToolUse', 'PostToolUse', 'SubagentStart', 'SubagentStop']) assert.ok(emit(ev)?.async, ev);
-  const sensore = hooks.PreToolUse.find((g) => g.hooks[0].command.includes('scelta-modello.js'));
-  assert.ok(sensore && /\bAgent\b/.test(sensore.matcher) && !sensore.hooks[0].async, 'il sensore scelta-modello deve essere sincrono e filtrare Agent');
+  for (const ev of ['PreToolUse', 'PostToolUse', 'SubagentStart', 'SubagentStop']) assert.ok(hooks[ev]?.[0].hooks[0].async, ev);
+  assert.ok(Object.values(hooks).flat().every((g) => g.hooks.every((h) => h.async)), 'nessun hook deve bloccare Claude');
+});
+await prova('la skill impone model ed effort a ogni chiamata', () => {
+  assert.match(generati.get('skills/apri/SKILL.md'), /Regola fissa.*`model` ed `effort`/);
 });
 
 console.log(`\n${ok} prove superate.`);

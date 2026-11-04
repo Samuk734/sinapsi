@@ -17,18 +17,16 @@
 |---|---|
 | `roster/skill.template.md` → `skills/apri/SKILL.md` | Il "badge" del Capo: apertura, organico, regole per scegliere modello ed effort, busta, formazione. `npm run build` lo compila con l'organico. |
 | `roster/azienda.json` | Reparti, capi reparto e impiegati (per la UI e per l'organico della skill). Modello ed effort qui sono solo consigli per il Capo. |
-| `roster/agenti/*.md` → `agents/` | Il prompt specifico di ogni impiegato; nel plugin si chiama `sinapsi:<nome>`. Il frontmatter non ha `model` né `effort` (il build lo vieta): li passa il Capo a ogni chiamata. |
+| `roster/agenti/*.md` → `agents/` | Il prompt specifico di ogni impiegato; nel plugin si chiama `sinapsi:<nome>`. Il frontmatter non ha `model` né `effort` (il build lo vieta): li passa il Capo a ogni chiamata, per la regola fissa della skill. Se mancano, il traduttore registra "eredita"/"sessione". |
 | `roster/contratto-busta.md` | Regole comuni e formato della busta, aggiunti in coda a ogni agente da `npm run build`. |
-| `hooks/emit.js` | Sensore: inoltra il payload dell'hook al server. Non scrive mai su stdout ed esce sempre con 0. |
-| `hooks/scelta-modello.js` | Sensore sincrono su PreToolUse di `Agent`: se un impiegato `sinapsi-*` viene chiamato senza `model`, esce con 2 e il motivo torna al Capo, che ripete la chiamata scegliendo il modello. Il traduttore applica la stessa regola e non assume nessuno per le chiamate respinte. |
-| `server/server.js` | HTTP + SSE su porta 7420, replay degli eventi alla connessione, file statici. |
+| `hooks/emit.js` | Sensore: inoltra il payload dell'hook al server. Non scrive mai su stdout ed esce sempre con 0. || `server/server.js` | HTTP + SSE su porta 7420, replay degli eventi alla connessione, file statici. |
 | `server/traduttore.js` | Traduce gli hook (formato Claude Code) in eventi Sinapsi. Tiene la mappa tool_use_id ↔ agent_id. |
 | `server/trascrizioni.js` | Legge in coda i JSONL dei subagent: pensiero, testo, strumenti, token. |
 | `server/demo.js` | Simulatore: produce hook e trascrizioni finti realistici, così la UI si vede anche senza Claude. |
 | `bin/sinapsi.js` | CLI: `avvia`, `stato`, `apri`, `demo`, `posizione-aperta`. |
 | `scripts/build.js` | Genera `agents/` e `skills/` dal roster. Con `--check` verifica che siano aggiornati (CI). |
 | `.claude-plugin/` | Manifest del plugin e del marketplace (la repo è installabile con `/plugin marketplace add`). |
-| `hooks/hooks.json` | Collega i sensori agli eventi di Claude Code: `emit.js` in modalità asincrona, `scelta-modello.js` sincrono e solo sul tool `Agent`. |
+| `hooks/hooks.json` | Collega i sensori agli eventi di Claude Code, in modalità asincrona. |
 
 ## Perché questa architettura fa risparmiare token
 1. **Contesto del Capo pulito**: il lavoro degli impiegati (letture, output dei comandi) resta nel loro contesto; al Capo arriva solo la busta.

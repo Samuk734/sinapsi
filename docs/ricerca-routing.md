@@ -87,7 +87,7 @@ Ogni report termina con `<busta>`: esito, affidabilita, revisione, sintesi.
 ```
 
 ## 4. Modifiche suggerite a roster e descrizioni
-Nota successiva: gli impiegati non hanno più `model` né `effort` nel frontmatter. I valori qui sotto sono i consigli che compaiono nell'organico della skill; il Capo sceglie a ogni chiamata, e una chiamata senza `model` viene respinta da `hooks/scelta-modello.js`.
+Nota successiva: gli impiegati non hanno più `model` né `effort` nel frontmatter. I valori qui sotto sono i consigli che compaiono nell'organico della skill; il Capo li sceglie e li passa a ogni chiamata, come impone la regola fissa della skill.
 
 - `sinapsi-esploratore`: da haiku/low a **haiku/medium**, perché esplora su più passi.
 - Impiegati opus: effort da high a **medium**, alzato a high nella singola chiamata quando il lavoro è critico. Restano a high `sinapsi-analista-guasti` e `sinapsi-reverse-firmware`, che conducono indagini lunghe.

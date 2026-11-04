@@ -2,7 +2,6 @@
 // Formato degli hook: https://code.claude.com/docs/en/hooks.md
 import path from 'node:path';
 import { Trascrizioni } from './trascrizioni.js';
-import { motivoRifiuto } from '../hooks/scelta-modello.js';
 
 const STRUMENTI_AGENTE = new Set(['Agent', 'Task']);
 const CAPO_REPARTO = 'sinapsi-capo-reparto';
@@ -101,10 +100,6 @@ export class Traduttore {
         return this.emit({ type: 'capo.richiesta', sessione, testo: corto(p.prompt, 280) });
       case 'PreToolUse':
         if (p.agent_id) return this.passoAgente(p, 'pre');
-        // la chiamata respinta dal sensore scelta-modello non parte: niente assunzione
-        if (STRUMENTI_AGENTE.has(p.tool_name) && motivoRifiuto(p)) {
-          return this.emit({ type: 'capo.stato', sessione, testo: `Chiamata respinta: manca il modello per ${nomeAgente(p.tool_input?.subagent_type)}` });
-        }
         if (STRUMENTI_AGENTE.has(p.tool_name)) return this.assumi(p);
         return this.emit({ type: 'capo.stato', sessione, testo: riassumiStrumento(p.tool_name, p.tool_input) });
       case 'PostToolUse':
