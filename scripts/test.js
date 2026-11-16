@@ -71,6 +71,12 @@ try {
   await post('/hook', { ...comuni, hook_event_name: 'SubagentStart', agent_id: A, agent_type: 'sinapsi:sinapsi-progettista-pcb' });
   await post('/hook', { ...comuni, hook_event_name: 'PreToolUse', agent_id: A, agent_type: 'sinapsi-progettista-pcb', tool_name: 'Read', tool_input: { file_path: 'hw/board.kicad_pcb' } });
   fs.appendFileSync(fileAgente, JSON.stringify({ type: 'assistant', message: { id: 'm1', model: 'claude-opus-5-5', content: [{ type: 'thinking', thinking: 'Controllo i piani di riferimento.' }], usage: { input_tokens: 1000, output_tokens: 200, cache_read_input_tokens: 5000, cache_creation_input_tokens: 0 } } }) + '\n');
+  // l'impiegato chiede un'informazione a un collega
+  await post('/hook', { ...comuni, hook_event_name: 'PreToolUse', agent_id: A, tool_name: 'Agent', tool_use_id: 'toolu_collega',
+    tool_input: { subagent_type: 'sinapsi:sinapsi-documentalista', description: 'Impedenza USB dal datasheet', prompt: 'Che impedenza differenziale chiede la USB 2.0?', model: 'sonnet', effort: 'medium' } });
+  await post('/hook', { ...comuni, hook_event_name: 'SubagentStart', agent_id: 'def456', agent_type: 'sinapsi:sinapsi-documentalista' });
+  await post('/hook', { ...comuni, hook_event_name: 'PostToolUse', agent_id: A, tool_name: 'Agent', tool_use_id: 'toolu_collega', tool_input: {},
+    tool_response: { status: 'completed', agentId: 'def456', content: [{ type: 'text', text: '90 ohm.\n<busta>\nesito: completato\naffidabilita: 0.50\nrevisione: no\nsintesi: 90 ohm differenziali\n</busta>' }] } });
   await attesa(800);
   const testo = 'Piano GND tagliato sotto USB.\n<busta>\nesito: completato\naffidabilita: 0.65\nrevisione: no\nsintesi: taglio nel piano sotto le linee USB\n</busta>';
   await post('/hook', { ...comuni, hook_event_name: 'PostToolUse', tool_name: 'Agent', tool_use_id: T, tool_input: {},
@@ -96,10 +102,16 @@ try {
   await prova('pensiero letto dalla trascrizione', () => assert.ok(di('agente.pensiero').some((e) => e.tipo === 'pensiero' && /piani/.test(e.testo))));
   await prova('token e costo dalla trascrizione', () => { const t = di('agente.token').at(-1); assert.equal(t.input, 1000); assert.ok(t.costo > 0); });
   await prova('busta con affidabilità 0.65 instradata al capo reparto', () => {
-    const b = di('busta').find((e) => e.tipo === 'report');
+    const b = di('busta').find((e) => e.pid === `${T}:out`);
     assert.deepEqual(b.percorso, [T, 'reparto:pcb']); assert.equal(b.affidabilita, 0.65);
   });
-  await prova('fine lavoro e uscita', () => { assert.equal(di('agente.finito').length, 1); assert.equal(di('agente.uscito').length, 1); });
+  await prova('collega: incarico e risposta tra impiegati, mai in revisione', () => {
+    const c = di('agente.assunto').find((e) => e.id === 'toolu_collega');
+    assert.equal(c?.reparto, 'ricerca'); assert.equal(c?.chiamante, T);
+    assert.deepEqual(di('busta').find((e) => e.pid === 'toolu_collega:in')?.percorso, [T, 'toolu_collega']);
+    assert.deepEqual(di('busta').find((e) => e.pid === 'toolu_collega:out')?.percorso, ['toolu_collega', T]);
+  });
+  await prova('fine lavoro e uscita', () => { assert.equal(di('agente.finito').length, 2); assert.equal(di('agente.uscito').length, 2); });
 } finally {
   server.kill();
 }
@@ -113,6 +125,18 @@ await prova(`tutti i ${attesi.size} impiegati del roster generati`, () => {
 });
 await prova('ogni impiegato ha il contratto della busta e nessun modello o effort fisso', () => {
   for (const [k, t] of generati) if (k.startsWith('agents/')) { assert.doesNotMatch(t, /^(model|effort):/m, k); assert.match(t, /<busta>/, k); }
+});
+await prova('strumenti espliciti, colleghi e blocco reverse dove servono', () => {
+  const area = new Map(roster.reparti.flatMap((r) => r.impiegati.map((i) => [i.agente, r.area])));
+  for (const a of attesi) {
+    const t = generati.get(`agents/${a}.md`), tools = /^tools:\s*(.+)$/m.exec(t)?.[1] || '';
+    assert.ok(tools && !/^disallowedTools:/m.test(t), `${a}: tools espliciti`);
+    const conColleghi = !['sinapsi-capo-reparto', 'sinapsi-esploratore', 'sinapsi-tester'].includes(a);
+    assert.equal(/\bAgent\b/.test(tools), conColleghi, `${a}: Agent`);
+    assert.equal(t.includes('## Chiedere a un collega'), conColleghi, `${a}: colleghi`);
+    assert.equal(t.includes('## Contesto e limiti del reverse'), area.get(a) === 'reverse', `${a}: reverse`);
+  }
+  assert.doesNotMatch(generati.get('agents/sinapsi-documentalista.md'), /\{\{/);
 });
 await prova('skill compilata senza segnaposto, con i nomi del plugin', () => {
   const t = generati.get('skills/apri/SKILL.md');

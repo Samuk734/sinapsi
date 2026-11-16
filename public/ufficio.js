@@ -77,11 +77,26 @@ scena.add(cielo);
 
 // ===== Edificio ==========================================================================================================
 const statico = new THREE.Group(); scena.add(statico);
-const X0 = -32, X1 = 32, Z0 = -40, Z1 = 34, H = 3.2;
-const COLONNE_X = [-25, -9, 9, 25], RIGHE_Z = [-22.5, -10.5, 1.5, 13.5], W = 13, D = 9;
+// La pianta dipende dall'organico: 4 colonne di stanze e tante righe quante ne servono (almeno 4).
+// La riga più a sud resta davanti alla hall; quelle in più allungano il piano verso nord,
+// e direzione, cucina e sala riunioni si spostano di conseguenza.
+const azienda = (await caricaAzienda()).azienda;
+const COLONNE_X = [-25, -9, 9, 25], W = 13, D = 9, PASSO_RIGHE = 12;
+const RIGHE = Math.max(4, Math.ceil(azienda.reparti.length / COLONNE_X.length));
+const RIGHE_Z = Array.from({ length: RIGHE }, (_, r) => 13.5 - (RIGHE - 1 - r) * PASSO_RIGHE);
+const X0 = -32, X1 = 32, Z1 = 34, Z0 = RIGHE_Z[0] - D / 2 - 13, H = 3.2; // con 4 righe Z0 = -40 come prima
+const Z_NORD = Z0 + 4.5; // centro della fascia nord (direzione, cucina, sala riunioni)
+const CENTRO_Z = (Z0 + Z1) / 2;
 const corridoioDi = (riga) => RIGHE_Z[riga] + D / 2 + 1.5;
 
+// il sole punta al centro del piano e la sua ombra copre tutto l'edificio anche quando si allunga
+sole.target.position.set(0, 0, CENTRO_Z); sole.position.set(-70, 38, -28).add(sole.target.position); scena.add(sole.target);
+const coperturaOmbra = Math.max(52, Math.ceil(Math.hypot(X1, (Z1 - Z0) / 2, H)) + 1);
+Object.assign(sole.shadow.camera, { left: -coperturaOmbra, right: coperturaOmbra, top: coperturaOmbra, bottom: -coperturaOmbra });
+sole.shadow.camera.updateProjectionMatrix();
+
 const pavimentoLegno = new THREE.MeshStandardMaterial({ map: parquet(), roughness: 0.42, metalness: 0.0 });
+pavimentoLegno.map.repeat.set(10, 10 * (21.5 - Z0) / 61.5); // stesse doghe di prima anche con il piano più lungo
 const marmo = new THREE.MeshStandardMaterial({ map: rumore([150, 148, 144], 12, 256, [14, 6]), roughness: 0.25, metalness: 0.05 });
 const rivestimento = new THREE.MeshStandardMaterial({ map: rumore([62, 66, 76], 10, 256, [4, 1]), roughness: 0.55, metalness: 0.35 });
 const cemento = new THREE.MeshStandardMaterial({ map: rumore([168, 166, 160], 20, 256, [1, 2]), roughness: 0.85 });
@@ -103,7 +118,8 @@ function costruisciEdificio() {
     for (const y of [0, 1.05, H - 0.1]) cubo(statico, lungoZ ? [0.1, 0.08, L] : [L, 0.08, 0.1], montante, [(x1 + x2) / 2, y, (z1 + z2) / 2]);
   };
   facciata(X0, Z0, X1, Z0); facciata(X0, Z0, X0, Z1); facciata(X1, Z0, X1, Z1); facciata(X0, Z1, -9, Z1); facciata(9, Z1, X1, Z1);
-  for (const x of [-17, 17]) for (const z of [-28.5, -16.5, -4.5, 7.5, 19.5]) cil(statico, 0.32, H, cemento, [x, 0, z], { seg: 24 });
+  // pilastri nei corridoi: uno a nord della prima riga e uno nel corridoio di ogni riga
+  for (const x of [-17, 17]) for (const z of [RIGHE_Z[0] - 6, ...RIGHE_Z.map((_, r) => corridoioDi(r))]) cil(statico, 0.32, H, cemento, [x, 0, z], { seg: 24 });
 
   // nucleo ascensori
   cubo(statico, [18, H, 3.2], rivestimento, [0, 0, Z1 - 1.6]);
@@ -141,13 +157,13 @@ function hallEArredi() {
   for (const x of [-14, -20]) { const d = new THREE.Group(); d.position.set(x, 0, 27); statico.add(d); cubo(d, [2.2, 0.42, 0.9], M.tessutoGrigio, [0, 0.1, 0], { r: 0.08 }); cubo(d, [2.2, 0.45, 0.22], M.tessutoGrigio, [0, 0.45, -0.34], { r: 0.08 }); }
   cubo(statico, [1.2, 0.4, 0.7], M.rovere, [-17, 0, 28.6], { r: 0.04 });
   for (const [x, z, s] of [[-9.8, 31.5, 1.4], [9.8, 31.5, 1.4], [-25, 31, 1.6], [25, 31, 1.6], [-30.5, 23, 1.2], [30.5, 23, 1.2], [6, 23.5, 0.9], [-6, 23.5, 0.9]]) pianta(statico, x, z, s);
-  for (const z of [-12.5, -0.5, 11.5]) { cubo(statico, [1.0, 0.45, 3.0], M.rovere, [0, 0, z], { r: 0.03 }); pianta(statico, 0, z - 2.4, 0.9); pianta(statico, 0, z + 2.4, 0.9); }
+  for (const z of RIGHE_Z.slice(1).map((zr) => zr - 2)) { cubo(statico, [1.0, 0.45, 3.0], M.rovere, [0, 0, z], { r: 0.03 }); pianta(statico, 0, z - 2.4, 0.9); pianta(statico, 0, z + 2.4, 0.9); }
 }
 
 // direzione, cucina e sala riunioni sul lato nord
 const capo = {};
 function lineaNord() {
-  const cz = -35.5, g = new THREE.Group(); g.position.set(0, 0, cz); statico.add(g);
+  const cz = Z_NORD, g = new THREE.Group(); g.position.set(0, 0, cz); statico.add(g);
   cubo(g, [18, 0.025, 9], new THREE.MeshStandardMaterial({ map: rumore([60, 62, 70], 12, 256, [6, 3]), roughness: 0.9 }), [0, 0, 0], { ombra: false });
   for (const [w, x, z, ry] of [[18, 0, 4.5, 0], [9, -9, 0, Math.PI / 2], [9, 9, 0, Math.PI / 2]]) {
     const v = new THREE.Mesh(new THREE.PlaneGeometry(w, H - 0.2), M.vetro); v.position.set(x, (H - 0.2) / 2, z); v.rotation.y = ry; g.add(v);
@@ -166,14 +182,14 @@ function lineaNord() {
   cubo(g, [1.2, 0.38, 0.8], M.rovere, [0, 0, 2.0], { r: 0.03 });
   scaffale(g, -7.6, -3.9, 0, { w: 2.2, h: 2.2, contenuto: 'libri' }); pianta(g, 8.2, -3.8, 1.4); pianta(g, -8.2, 3.6, 1.2);
   // cucina
-  const k = new THREE.Group(); k.position.set(-21.5, 0, -35.5); statico.add(k);
+  const k = new THREE.Group(); k.position.set(-21.5, 0, Z_NORD); statico.add(k);
   cubo(k, [10, 0.9, 0.7], M.laminato, [0, 0, -4.0]); cubo(k, [10, 0.04, 0.72], M.granito, [0, 0.9, -4.0]);
   cubo(k, [0.8, 2.0, 0.7], M.acciaio, [5.4, 0, -4.0], { r: 0.02 });
   cubo(k, [0.45, 0.5, 0.4], M.metalloNero, [-2, 0.94, -4.0], { r: 0.03 }); cubo(k, [0.1, 0.05, 0.01], new THREE.MeshStandardMaterial({ color: '#000', emissive: '#22d3ee', emissiveIntensity: 1.5 }), [-2, 1.25, -3.79]);
   for (const x of [-3, 0, 3]) { cil(k, 0.45, 0.04, M.rovere, [x, 0.72, 0.5]); cil(k, 0.04, 0.72, M.metalloNero, [x, 0, 0.5]); for (const a of [0, 2.1, 4.2]) cil(k, 0.2, 0.45, M.tessutoGrigio, [x + Math.cos(a) * 0.75, 0, 0.5 + Math.sin(a) * 0.75]); }
   pianta(k, 4.5, 2.8, 1.3);
   // sala riunioni
-  const r = new THREE.Group(); r.position.set(21.5, 0, -35.5); statico.add(r);
+  const r = new THREE.Group(); r.position.set(21.5, 0, Z_NORD); statico.add(r);
   cubo(r, [6, 0.05, 1.8], M.rovere, [0, 0.72, 0], { r: 0.02 }); cubo(r, [5, 0.72, 0.6], M.metalloNero, [0, 0, 0]);
   for (let i = 0; i < 5; i++) for (const s of [-1, 1]) sedia(r, -2.4 + i * 1.2, s * 1.3, s > 0 ? Math.PI : 0);
   tv(r, [0, 1.7, -4.4], 0, 2.6);
@@ -191,7 +207,7 @@ const stanze = new Map();
 const insegne = [];
 function costruisciReparti(azienda) {
   azienda.reparti.forEach((rep, i) => {
-    const riga = 3 - Math.floor(i / 4), col = i % 4, cx = COLONNE_X[col], cz = RIGHE_Z[riga];
+    const riga = RIGHE - 1 - Math.floor(i / COLONNE_X.length), col = i % COLONNE_X.length, cx = COLONNE_X[col], cz = RIGHE_Z[riga];
     const s = new THREE.Group(); s.position.set(cx, 0, cz); statico.add(s);
     const moquette = new THREE.MeshStandardMaterial({ map: rumore([96, 99, 106], 22, 256, [5, 4]), roughness: 0.95, color: new THREE.Color('#ffffff').lerp(new THREE.Color(rep.colore), 0.18) });
     cubo(s, [W - 0.1, 0.025, D - 0.1], moquette, [0, 0, 0], { ombra: false });
@@ -406,7 +422,7 @@ function aggiornaBuste(dt) {
 // ===== Eventi ===================================================================================================================
 const conta = { buste: 0, pensieri: [], token: new Map(), risparmio: 0 };
 const attivitaRep = new Map();
-let P, azienda;
+let P;
 const nomeDi = (x) => {
   if (x === 'capo') return 'Il Capo';
   if (x.startsWith('reparto:')) return azienda.reparti.find((r) => r.id === x.slice(8))?.capoReparto.nome || x;
@@ -472,7 +488,6 @@ $('bDemo').onclick = () => demo(!demoOn).then((r) => statoDemo(r.demo));
 // ===== Camera: orbita, viste, inseguimento, passeggiata ========================================================================
 const orbita = new OrbitControls(camera, renderer.domElement);
 Object.assign(orbita, { enableDamping: true, dampingFactor: 0.06, maxPolarAngle: 1.38, minDistance: 2.5, maxDistance: 190, zoomToCursor: true });
-orbita.target.set(0, 0, -4);
 let viaggio = null, seguito = null;
 const morbido = (k) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2);
 function volaA(bersaglio, dist, alto = 0.75) {
@@ -483,11 +498,14 @@ function volaA(bersaglio, dist, alto = 0.75) {
 }
 function segui(om) { volaA(om.g.position.clone(), 6, 0.6); setTimeout(() => { seguito = om; }, 1700); }
 orbita.addEventListener('start', () => { seguito = null; viaggio = null; });
+// la panoramica si allontana in proporzione alla profondità del piano (74 m con 4 righe)
+const scalaVista = (Z1 - Z0) / 74, mira = new THREE.Vector3(0, 0, CENTRO_Z - 1);
 const VISTE = {
-  panoramica: [new THREE.Vector3(46, 44, 74), new THREE.Vector3(0, 0, -4)],
+  panoramica: [mira.clone().add(new THREE.Vector3(46, 44, 78).multiplyScalar(scalaVista)), mira],
   hall: [new THREE.Vector3(7, 4.2, 19.7), new THREE.Vector3(0, 1.1, 29)],
-  direzione: [new THREE.Vector3(9, 8, -22), new THREE.Vector3(0, 1, -36)],
+  direzione: [new THREE.Vector3(9, 8, Z_NORD + 13.5), new THREE.Vector3(0, 1, Z_NORD - 0.5)],
 };
+camera.position.copy(VISTE.panoramica[0]); orbita.target.copy(VISTE.panoramica[1]);
 for (const [k, [p, t]] of Object.entries(VISTE)) document.querySelector(`[data-vista="${k}"]`)?.addEventListener('click', () => { seguito = null; viaggio = { da: camera.position.clone(), a: p.clone(), t0: orbita.target.clone(), t1: t.clone(), t: 0 }; });
 
 const passeggiata = new PointerLockControls(camera, document.body);
@@ -580,7 +598,6 @@ function aggiornaTV() {
 }
 
 // ===== Avvio =====================================================================================================================
-azienda = (await caricaAzienda()).azienda;
 costruisciEdificio(); hallEArredi(); lineaNord();
 capo.tv.userData.dinamico = true; capo.schermoPC.userData.dinamico = true;
 costruisciReparti(azienda);

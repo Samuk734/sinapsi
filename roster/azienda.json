@@ -2,19 +2,80 @@
   "nome": "Sinapsi HQ",
   "capo": { "id": "capo", "nome": "Il Capo", "ruolo": "Direttore (la chat che apre Sinapsi)" },
   "aree": [
-    { "id": "digitale",   "nome": "Area Digitale" },
     { "id": "elettronica", "nome": "Area Elettronica" },
-    { "id": "meccanica",  "nome": "Area Meccanica" },
-    { "id": "scienza",    "nome": "Area Scienza & Ricerca" },
-    { "id": "qualita",    "nome": "Area Qualità & Documentazione" }
+    { "id": "firmware",    "nome": "Area Firmware & Software" },
+    { "id": "reverse",     "nome": "Area Reverse Engineering" },
+    { "id": "digitale",    "nome": "Area Digitale" },
+    { "id": "meccanica",   "nome": "Area Meccanica" },
+    { "id": "scienza",     "nome": "Area Scienza & Ricerca" },
+    { "id": "qualita",     "nome": "Area Qualità & Documentazione" }
   ],
   "reparti": [
-    { "id": "software", "area": "digitale", "nome": "Sviluppo Software", "colore": "#8b5cf6",
+    { "id": "schematici", "area": "elettronica", "nome": "Schede · Schematici", "colore": "#facc15",
+      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Schematici" },
+      "impiegati": [
+        { "agente": "sinapsi-progettista-schematici", "nome": "Progettista schematici", "modello": "opus", "effort": "xhigh", "mansione": "Schema d'insieme: microcontrollore, logica digitale, interfacce, protezioni, integrazione dei blocchi. Non alimentazioni (→ alimentazioni), non analogica di precisione (→ analogica)." },
+        { "agente": "sinapsi-progettista-alimentazioni", "nome": "Progettista alimentazioni", "modello": "opus", "effort": "xhigh", "mansione": "Albero di alimentazione, switching e LDO, batterie e ricarica, sequenze, protezioni di ingresso, stabilità degli anelli. Non verifiche SPICE (→ simulazione)." },
+        { "agente": "sinapsi-progettista-analogica", "nome": "Progettista analogica", "modello": "opus", "effort": "xhigh", "mansione": "Front-end di sensori, ADC e DAC, operazionali, filtri, riferimenti, budget di rumore e di errore." },
+        { "agente": "sinapsi-revisore-schematici", "nome": "Revisore schematici", "modello": "fable", "effort": "high", "mansione": "Revisione indipendente prima del layout: ERC, netlist, livelli, pull-up, stati al reset, dati di datasheet. Non progetta (→ progettisti)." }
+      ] },
+    { "id": "pcb", "area": "elettronica", "nome": "Schede · PCB", "colore": "#16a34a",
+      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo PCB" },
+      "impiegati": [
+        { "agente": "sinapsi-progettista-pcb", "nome": "Progettista PCB", "modello": "opus", "effort": "xhigh", "mansione": "Piazzamento, sbroglio, stackup, piani, termica, regole del produttore. Non impedenze, SI ed EMC (→ SI/EMC), non file di produzione (→ produzione)." },
+        { "agente": "sinapsi-specialista-si-emc", "nome": "Specialista SI, PI ed EMC", "modello": "fable", "effort": "medium", "mansione": "Impedenze, percorsi di ritorno, diafonia, rete di disaccoppiamento, emissioni e immunità, pre-compliance." },
+        { "agente": "sinapsi-tecnico-produzione", "nome": "Tecnico produzione PCB", "modello": "opus", "effort": "xhigh", "mansione": "DFM e DFA, Gerber e forature, pick-and-place, pannelli, punti di test, pacchetto per il produttore." }
+      ] },
+    { "id": "componenti", "area": "elettronica", "nome": "Componenti & Librerie", "colore": "#ec4899",
+      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Componenti" },
+      "impiegati": [
+        { "agente": "sinapsi-selezione-componenti", "nome": "Selezionatore componenti", "modello": "opus", "effort": "xhigh", "mansione": "Scelta parametrica, disponibilità, obsolescenza, second source, distinte base (BOM)." },
+        { "agente": "sinapsi-bibliotecario-cad", "nome": "Bibliotecario CAD", "modello": "opus", "effort": "xhigh", "mansione": "Simboli, footprint IPC-7351 e modelli 3D dal datasheet, verifica di pinout e land pattern." }
+      ] },
+    { "id": "ingegneria", "area": "elettronica", "nome": "Ufficio Ingegneria", "colore": "#f97316",
+      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Ingegneria" },
+      "impiegati": [
+        { "agente": "sinapsi-ingegnere-calcoli", "nome": "Ingegnere calcoli", "modello": "opus", "effort": "xhigh", "mansione": "Dimensionamenti elettrici e termici, perdite, filtri, worst-case e tolleranze. Non simulazioni circuitali (→ simulazione), non campi (→ fisico)." },
+        { "agente": "sinapsi-simulatore-circuiti", "nome": "Specialista simulazione circuiti", "modello": "opus", "effort": "xhigh", "mansione": "Netlist SPICE: transitori, AC, rumore, Monte Carlo, stabilità degli anelli." }
+      ] },
+    { "id": "diagnostica", "area": "elettronica", "nome": "Diagnostica & Collaudo", "colore": "#fb7185",
+      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Diagnostica" },
+      "impiegati": [
+        { "agente": "sinapsi-analista-guasti", "nome": "Analista guasti", "modello": "fable", "effort": "high", "mansione": "Crash, log seriali, dump, sintomi hardware: ipotesi e verifiche, con il sorgente disponibile. Non bring-up né piani di prova (→ collaudo)." },
+        { "agente": "sinapsi-ingegnere-collaudo", "nome": "Ingegnere collaudo", "modello": "opus", "effort": "xhigh", "mansione": "Bring-up di schede nuove, piani di prova, test di produzione, automazione degli strumenti, report di collaudo." }
+      ] },
+    { "id": "normative", "area": "elettronica", "nome": "Normative & Certificazioni", "colore": "#94a3b8",
+      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Normative" },
+      "impiegati": [
+        { "agente": "sinapsi-consulente-normative", "nome": "Consulente normative", "modello": "opus", "effort": "xhigh", "mansione": "Marcatura CE, EMC, LVD, RED, RoHS, fascicolo tecnico, prove di conformità. Non soluzioni tecniche (→ SI/EMC)." }
+      ] },
+    { "id": "firmware", "area": "firmware", "nome": "Firmware", "colore": "#a855f7",
+      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Firmware" },
+      "impiegati": [
+        { "agente": "sinapsi-architetto-firmware", "nome": "Architetto firmware", "modello": "fable", "effort": "high", "mansione": "Task e RTOS, macchine a stati, mappa di memoria, bootloader e aggiornamenti, basso consumo, interfacce tra moduli. Non implementa (→ sviluppatore)." },
+        { "agente": "sinapsi-dev-embedded", "nome": "Sviluppatore firmware", "modello": "opus", "effort": "xhigh", "mansione": "C/C++ per microcontrollori: driver, periferiche, ISR, RTOS, bootloader. Non Linux embedded (→ Linux), non tool PC (→ applicativo)." },
+        { "agente": "sinapsi-dev-linux-embedded", "nome": "Sviluppatore Linux embedded", "modello": "opus", "effort": "xhigh", "mansione": "Yocto e Buildroot, device tree, driver del kernel, U-Boot, servizi di sistema." },
+        { "agente": "sinapsi-verificatore-firmware", "nome": "Verificatore firmware", "modello": "opus", "effort": "xhigh", "mansione": "Analisi statica e MISRA, test unitari su host, stack, uso di flash e RAM. Non corregge (→ sviluppatore)." }
+      ] },
+    { "id": "software", "area": "firmware", "nome": "Sviluppo Software", "colore": "#8b5cf6",
       "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Software" },
       "impiegati": [
-        { "agente": "sinapsi-dev-embedded", "nome": "Sviluppatore C embedded", "modello": "sonnet", "effort": "high", "mansione": "Firmware C/C++ per microcontrollori: driver, ISR, RTOS, bootloader. Non script né tool PC (→ applicativo)." },
-        { "agente": "sinapsi-dev-app", "nome": "Sviluppatore applicativo", "modello": "sonnet", "effort": "medium", "mansione": "Script, tool di supporto, applicazioni desktop, automazioni. Non firmware (→ embedded), non siti (→ web)." },
-        { "agente": "sinapsi-architetto-software", "nome": "Architetto software", "modello": "opus", "effort": "medium", "mansione": "Architettura, interfacce, piani di refactoring, scelte tecniche." }
+        { "agente": "sinapsi-dev-app", "nome": "Sviluppatore applicativo", "modello": "opus", "effort": "xhigh", "mansione": "Script, tool di supporto, applicazioni desktop, automazioni. Non firmware (→ firmware), non siti (→ web)." },
+        { "agente": "sinapsi-architetto-software", "nome": "Architetto software", "modello": "fable", "effort": "high", "mansione": "Architettura, interfacce, piani di refactoring, scelte tecniche." }
+      ] },
+    { "id": "reverse", "area": "reverse", "nome": "Reverse Software & Firmware", "colore": "#f43f5e",
+      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Reverse" },
+      "impiegati": [
+        { "agente": "sinapsi-reverse-firmware", "nome": "Reverse engineer firmware", "modello": "opus", "effort": "xhigh", "mansione": "Analisi statica di firmware e binari (IDA, REA, Ghidra): funzioni, strutture dati, protocolli. Non estrazione dalle immagini (→ estrattore), non guasti con il sorgente (→ analista guasti)." },
+        { "agente": "sinapsi-estrattore-firmware", "nome": "Estrattore firmware", "modello": "opus", "effort": "xhigh", "mansione": "Immagini e pacchetti di aggiornamento: formati, header, compressioni, file system, indirizzo di base. Non analisi del codice (→ reverse firmware)." },
+        { "agente": "sinapsi-analista-dinamico", "nome": "Analista dinamico", "modello": "opus", "effort": "xhigh", "mansione": "Analisi a runtime: debug GDB e OpenOCD, emulazione QEMU e Unicorn, tracciamento e strumentazione." },
+        { "agente": "sinapsi-reverse-applicazioni", "nome": "Reverse engineer applicazioni", "modello": "opus", "effort": "xhigh", "mansione": "Applicazioni PC e mobile (.NET, Java, Android, Electron): protocolli verso i dispositivi, formati, interoperabilità." }
+      ] },
+    { "id": "reverse-hw", "area": "reverse", "nome": "Reverse Hardware", "colore": "#ef4444",
+      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Reverse Hardware" },
+      "impiegati": [
+        { "agente": "sinapsi-reverse-hardware", "nome": "Reverse engineer hardware", "modello": "opus", "effort": "xhigh", "mansione": "Ricostruzione di schede: componenti dalle marcature, schema dalla netlist, alimentazioni, porte di debug. Non decodifica catture (→ protocolli)." },
+        { "agente": "sinapsi-analista-protocolli", "nome": "Analista protocolli", "modello": "opus", "effort": "xhigh", "mansione": "Catture di bus e reti: UART, I2C, SPI, CAN, Modbus, USB, Ethernet." }
       ] },
     { "id": "web", "area": "digitale", "nome": "Sviluppo Web", "colore": "#3b82f6",
       "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Web" },
@@ -27,38 +88,6 @@
       "impiegati": [
         { "agente": "sinapsi-designer-ui", "nome": "Designer UI/UX", "modello": "sonnet", "effort": "medium", "mansione": "Interfacce, design system, layout, prototipi HTML/CSS. Non codice di produzione (→ frontend), non loghi (→ grafico)." },
         { "agente": "sinapsi-grafico", "nome": "Grafico visual", "modello": "sonnet", "effort": "medium", "mansione": "Loghi, icone, SVG, illustrazioni, materiali tecnici e commerciali." }
-      ] },
-    { "id": "reverse", "area": "digitale", "nome": "Reverse Engineering", "colore": "#f43f5e",
-      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Reverse" },
-      "impiegati": [
-        { "agente": "sinapsi-reverse-firmware", "nome": "Reverse engineer", "modello": "opus", "effort": "high", "mansione": "Firmware, binari, formati di file: disassemblaggio e ricostruzione. Non diagnosi di guasti con sorgente (→ analista guasti)." },
-        { "agente": "sinapsi-analista-protocolli", "nome": "Analista protocolli", "modello": "sonnet", "effort": "medium", "mansione": "Decodifica catture UART, I2C, SPI, CAN, Modbus, Ethernet." }
-      ] },
-    { "id": "schematici", "area": "elettronica", "nome": "Schede · Schematici", "colore": "#facc15",
-      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Schematici" },
-      "impiegati": [
-        { "agente": "sinapsi-progettista-schematici", "nome": "Progettista schematici", "modello": "opus", "effort": "medium", "mansione": "Circuiti di alimentazione, analogici, digitali, interfacce e protezioni. Non layout (→ PCB), non ricerche di mercato (→ selezione componenti)." }
-      ] },
-    { "id": "pcb", "area": "elettronica", "nome": "Schede · PCB", "colore": "#16a34a",
-      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo PCB" },
-      "impiegati": [
-        { "agente": "sinapsi-progettista-pcb", "nome": "Progettista PCB", "modello": "sonnet", "effort": "high", "mansione": "Layout, stackup, impedenze, EMC, termica, DFM, Gerber." }
-      ] },
-    { "id": "ingegneria", "area": "elettronica", "nome": "Ufficio Ingegneria", "colore": "#f97316",
-      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Ingegneria" },
-      "impiegati": [
-        { "agente": "sinapsi-ingegnere-calcoli", "nome": "Ingegnere calcoli", "modello": "opus", "effort": "medium", "mansione": "Dimensionamenti elettrici e termici, perdite, filtri, worst-case. Non simulazioni di campo (→ fisico)." },
-        { "agente": "sinapsi-selezione-componenti", "nome": "Selezione componenti", "modello": "sonnet", "effort": "medium", "mansione": "Scelta parametrica, disponibilità, obsolescenza, alternative, BOM." }
-      ] },
-    { "id": "diagnostica", "area": "elettronica", "nome": "Diagnostica & Guasti", "colore": "#fb7185",
-      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Diagnostica" },
-      "impiegati": [
-        { "agente": "sinapsi-analista-guasti", "nome": "Analista guasti", "modello": "opus", "effort": "high", "mansione": "Crash, log seriali, dump, sintomi hardware: ipotesi e verifiche, con il sorgente disponibile." }
-      ] },
-    { "id": "normative", "area": "elettronica", "nome": "Normative & Certificazioni", "colore": "#94a3b8",
-      "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Normative" },
-      "impiegati": [
-        { "agente": "sinapsi-consulente-normative", "nome": "Consulente normative", "modello": "sonnet", "effort": "medium", "mansione": "Marcatura CE, EMC, LVD, RED, RoHS, fascicolo tecnico, piani di prova." }
       ] },
     { "id": "disegno", "area": "meccanica", "nome": "Disegno Meccanico", "colore": "#2dd4bf",
       "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Disegno" },
@@ -84,13 +113,13 @@
     { "id": "fisica", "area": "scienza", "nome": "Fisica & Simulazione", "colore": "#6366f1",
       "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Fisica" },
       "impiegati": [
-        { "agente": "sinapsi-fisico", "nome": "Fisico e simulazione", "modello": "opus", "effort": "medium", "mansione": "Modelli fisici e simulazioni numeriche: EM, termica, dinamica, segnali." }
+        { "agente": "sinapsi-fisico", "nome": "Fisico e simulazione", "modello": "opus", "effort": "high", "mansione": "Modelli fisici e simulazioni numeriche: EM, termica, dinamica, segnali." }
       ] },
     { "id": "qualita", "area": "qualita", "nome": "Test & Qualità", "colore": "#34d399",
       "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Qualità" },
       "impiegati": [
         { "agente": "sinapsi-tester", "nome": "Tester", "modello": "haiku", "effort": "low", "mansione": "Compila, lancia i test, riporta errori in forma compatta. Non legge il codice per trovare bug (→ revisore)." },
-        { "agente": "sinapsi-revisore", "nome": "Revisore codice", "modello": "sonnet", "effort": "medium", "mansione": "Code review mirata ai bug reali, con riferimenti file:riga." }
+        { "agente": "sinapsi-revisore", "nome": "Revisore codice", "modello": "sonnet", "effort": "high", "mansione": "Code review mirata ai bug reali, con riferimenti file:riga." }
       ] },
     { "id": "documentazione", "area": "qualita", "nome": "Documentazione", "colore": "#e5e7eb",
       "capoReparto": { "agente": "sinapsi-capo-reparto", "nome": "Capo Documentazione" },

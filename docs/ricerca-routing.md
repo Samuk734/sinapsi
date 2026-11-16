@@ -89,6 +89,12 @@ Ogni report termina con `<busta>`: esito, affidabilita, revisione, sintesi.
 ## 4. Modifiche suggerite a roster e descrizioni
 Nota successiva: gli impiegati non hanno più `model` né `effort` nel frontmatter. I valori qui sotto sono i consigli che compaiono nell'organico della skill; il Capo li sceglie e li passa a ogni chiamata, come impone la regola fissa della skill.
 
+Nota 0.2.0 (misure del 2026-11-16, Claude Code 2.1.323), che supera alcuni punti qui sotto:
+- Elettronica, Firmware & Software e Reverse partono da opus xhigh o fable medium/high: lì la qualità viene prima del costo, per scelta dell'utente. Il reverse resta su opus, perché Fable ha filtri più severi sui temi di sicurezza informatica.
+- Strumenti sempre espliciti: un subagent con tutti gli strumenti parte da ~55.000 token di contesto, uno con pochi strumenti da ~5.000-7.000. I server MCP si indicano per nome (`mcp__rea`) e i loro strumenti restano differiti. Il build rifiuta agenti senza `tools:`.
+- I subagent possono chiamare altri subagent: gli impiegati hanno `Agent` per chiedere a un collega (al massimo due; chi è chiamato non ne chiama altri). Il subagent non vede l'elenco degli agenti, quindi il build gli aggiunge l'elenco compatto dei colleghi. Il punto su `disallowedTools: Agent` è superato.
+- Costo fisso per sessione: senza Sinapsi 45.560 token, con la 0.1.2 47.482 (~1.900), con la 0.2.0 ~3.500 in più (40 agenti; le liste degli strumenti pesano quanto le descrizioni).
+
 - `sinapsi-esploratore`: da haiku/low a **haiku/medium**, perché esplora su più passi.
 - Impiegati opus: effort da high a **medium**, alzato a high nella singola chiamata quando il lavoro è critico. Restano a high `sinapsi-analista-guasti` e `sinapsi-reverse-firmware`, che conducono indagini lunghe.
 - Sonnet: `sinapsi-consulente-normative` e `sinapsi-progettista-cablaggi` passano a medium. `sinapsi-dev-embedded` e `sinapsi-progettista-pcb` restano a high.

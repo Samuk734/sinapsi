@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Genera i componenti del plugin a partire dal roster:
-//   agents/sinapsi-*.md     prompt dell'impiegato + contratto della busta (modello ed effort li sceglie il Capo)
+//   agents/sinapsi-*.md     prompt dell'impiegato + blocchi comuni (reverse, colleghi) + contratto della busta
+//                           (modello ed effort li sceglie il Capo; strumenti sempre espliciti)
 //   skills/apri/SKILL.md    la skill del Capo, con l'organico e le soglie
 //   node scripts/build.js           scrive i file
 //   node scripts/build.js --check   esce con errore se i file generati non sono aggiornati (per la CI)
@@ -15,6 +16,12 @@ export function costruisci() {
   const config = JSON.parse(leggi('config/sinapsi.json'));
   const azienda = JSON.parse(leggi('roster/azienda.json'));
   const contratto = leggi('roster/contratto-busta.md');
+  const reverse = leggi('roster/contratto-reverse.md');
+  const areaDi = new Map(azienda.reparti.flatMap((r) => r.impiegati.map((i) => [i.agente, r.area])));
+  // chi può chiedere aiuto a un collega: tutti tranne chi fa lavoro meccanico o di verifica
+  const SENZA_COLLEGHI = new Set(['sinapsi-capo-reparto', 'sinapsi-esploratore', 'sinapsi-tester']);
+  const colleghi = leggi('roster/contratto-colleghi.md').replace('{{COLLEGHI}}', azienda.reparti
+    .map((r) => `- ${r.nome}: ${r.impiegati.map((i) => i.agente.replace(/^sinapsi-/, '')).join(', ')}`).join('\n'));
 
   const file = new Map();
   for (const f of fs.readdirSync(path.join(HQ, 'roster/agenti')).filter((x) => x.endsWith('.md')).sort()) {
@@ -25,18 +32,30 @@ export function costruisci() {
     if (!nome) throw new Error(`${f}: manca name`);
     // niente model né effort nel frontmatter: li sceglie il Capo a ogni chiamata
     if (/^(model|effort):/m.test(m[1])) throw new Error(`${f}: model ed effort non vanno fissati nell'agente`);
-    file.set(`agents/${nome}.md`, `---\n${m[1]}\n---\n${testo.slice(m[0].length).trimEnd()}\n${contratto}`);
+    // senza una lista esplicita l'impiegato eredita tutti gli strumenti e parte con ~55.000 token di contesto invece di ~6.000
+    const tools = /^tools:\s*(.+)$/m.exec(m[1]);
+    if (!tools || /^disallowedTools:/m.test(m[1])) throw new Error(`${f}: servono strumenti espliciti (tools:), senza disallowedTools`);
+    let fronte = m[1], blocchi = '';
+    if (areaDi.get(nome) === 'reverse') blocchi += reverse;
+    if (!SENZA_COLLEGHI.has(nome)) {
+      if (!/\bAgent\b/.test(tools[1])) fronte = fronte.replace(tools[0], `${tools[0].trimEnd()}, Agent`);
+      blocchi += colleghi;
+    }
+    file.set(`agents/${nome}.md`, `---\n${fronte}\n---\n${testo.slice(m[0].length).trimEnd()}\n${blocchi}${contratto}`);
   }
 
-  const righe = ['| Area | Reparto (id) | Impiegato | Mansione | Consigliato |', '|---|---|---|---|---|'];
+  // organico compatto: un titolo per area, una riga per reparto, una per impiegato
+  const righe = ['Dopo ogni nome: modello/effort consigliati e mansione.'];
   for (const area of azienda.aree) {
+    righe.push('', `**${area.nome.replace('Area ', '')}**`);
     for (const r of azienda.reparti.filter((x) => x.area === area.id)) {
-      for (const i of r.impiegati) righe.push(`| ${area.nome.replace('Area ', '')} | ${r.nome} (\`${r.id}\`) | \`sinapsi:${i.agente}\` | ${i.mansione} | ${i.modello}/${i.effort} |`);
+      righe.push(`- ${r.nome} (\`${r.id}\`)`);
+      for (const i of r.impiegati) righe.push(`  - \`sinapsi:${i.agente}\` ${i.modello}/${i.effort}: ${i.mansione}`);
     }
   }
   righe.push('', 'Revisore per tutti i reparti: `sinapsi:sinapsi-capo-reparto`.');
   const mythos = config.modelli.mythos?.attivo
-    ? 'Mythos non si passa chiamata per chiamata: serve un impiegato con `model: claude-mythos-5-1` nel frontmatter.'
+    ? `${config.modelli.mythos.nome} non si sceglie nella chiamata. Se l'utente lo vuole, la sessione del Capo deve girare con \`--model ${config.modelli.mythos.id}\`: allora, solo per gli impiegati che devono usarlo, ometti \`model\` e lo ereditano.`
     : 'Mythos non è attivo in questa installazione: non usarlo.';
   file.set('skills/apri/SKILL.md', leggi('roster/skill.template.md')
     .replace('{{ROSTER}}', righe.join('\n'))

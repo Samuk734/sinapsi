@@ -8,7 +8,7 @@ import path from 'node:path';
 const attesa = (ms) => new Promise((r) => setTimeout(r, ms));
 const rnd = (a, b) => Math.round(a + Math.random() * (b - a));
 const uid = () => Math.random().toString(16).slice(2, 10);
-const MODELLI = { haiku: 'claude-haiku-5-5', sonnet: 'claude-sonnet-5-5', opus: 'claude-opus-5-5', fable: 'claude-fable-5-1' };
+const MODELLI = { haiku: 'claude-haiku-5-5', sonnet: 'claude-sonnet-5-5', opus: 'claude-opus-5-5', fable: 'claude-fable-5-2' };
 
 class Stop extends Error {}
 
@@ -304,7 +304,7 @@ const SCENARI = [
       }),
     ]);
 
-    this.traduttore.eventoDiretto({ type: 'vacancy', reparto: 'software', ruolo: 'Specialista bootloader e IAP', modello: 'opus',
+    this.traduttore.eventoDiretto({ type: 'vacancy', reparto: 'firmware', ruolo: 'Specialista bootloader e IAP', modello: 'opus',
       motivo: 'Due incarichi su boot e flash hanno richiesto revisione: conviene uno specialista dedicato.' });
     await this.capoUsa(giro, 'TodoWrite', {});
   },

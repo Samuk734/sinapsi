@@ -570,13 +570,20 @@ function costruisciRete() {
   const capo = new Neurone({ chiave: 'capo', nome: 'Il Capo', tipo: 'capo', colore: '#ffcf73', raggio: 8, pos: new THREE.Vector3() });
   nodi.set('capo', capo);
   const aree = azienda.aree;
+  // ogni area ha uno spicchio proporzionale ai suoi reparti, con un margine fisso tra un'area e l'altra:
+  // giro completo = reparti × passo + aree × MARGINE. La prima area resta centrata a 0.3 rad come prima.
+  const MARGINE = 0.18, nRep = Math.max(1, azienda.reparti.length);
+  const passo = Math.max(0, Math.PI * 2 - aree.length * MARGINE) / nRep;
+  const repDi = (area) => azienda.reparti.filter((r) => r.area === area.id);
+  let inizio = 0.3 - (repDi(aree[0] || {}).length * passo) / 2;
   aree.forEach((area, ai) => {
-    const reps = azienda.reparti.filter((r) => r.area === area.id);
-    const base = (ai / aree.length) * Math.PI * 2 + 0.3, quota = Math.sin(ai * 2.1) * 55;
+    const reps = repDi(area), ampiezza = reps.length * passo;
+    const base = inizio + ampiezza / 2, quota = Math.sin(ai * 2.1) * 55;
+    inizio += ampiezza + MARGINE;
     const ea = document.createElement('div'); ea.className = 'et-area'; ea.textContent = area.nome.replace('Area ', '');
     const o = new CSS2DObject(ea); o.position.set(Math.cos(base) * 300, quota + 70, Math.sin(base) * 300); scena.add(o);
     reps.forEach((rep, j) => {
-      const ang = base + (j - (reps.length - 1) / 2) * 0.27, rad = 150 + (j % 2) * 36;
+      const ang = base + (j - (reps.length - 1) / 2) * passo, rad = 150 + (j % 2) * 36;
       const pos = new THREE.Vector3(Math.cos(ang) * rad, quota + (j % 2 ? 22 : -20) + (Math.random() - 0.5) * 12, Math.sin(ang) * rad);
       const fuori = pos.clone().normalize();
       const cr = new Neurone({ chiave: `reparto:${rep.id}`, nome: rep.nome, tipo: 'rep', colore: rep.colore, raggio: 3.4, pos, verso: fuori, dati: rep });

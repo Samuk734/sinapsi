@@ -99,11 +99,18 @@ export class Traduttore {
       case 'UserPromptSubmit':
         return this.emit({ type: 'capo.richiesta', sessione, testo: corto(p.prompt, 280) });
       case 'PreToolUse':
-        if (p.agent_id) return this.passoAgente(p, 'pre');
+        if (p.agent_id) {
+          // un impiegato che chiede aiuto a un collega
+          if (STRUMENTI_AGENTE.has(p.tool_name) && this.perAgentId.has(p.agent_id)) this.assumi(p, this.perAgentId.get(p.agent_id));
+          return this.passoAgente(p, 'pre');
+        }
         if (STRUMENTI_AGENTE.has(p.tool_name)) return this.assumi(p);
         return this.emit({ type: 'capo.stato', sessione, testo: riassumiStrumento(p.tool_name, p.tool_input) });
       case 'PostToolUse':
-        if (p.agent_id) return this.passoAgente(p, 'post');
+        if (p.agent_id) {
+          if (STRUMENTI_AGENTE.has(p.tool_name)) this.consegna(p.tool_use_id, p.tool_response, p.tool_response?.agentId);
+          return this.passoAgente(p, 'post');
+        }
         if (STRUMENTI_AGENTE.has(p.tool_name)) return this.consegna(p.tool_use_id, p.tool_response, p.tool_response?.agentId);
         return;
       case 'SubagentStart': return this.collega(p);
@@ -129,7 +136,8 @@ export class Traduttore {
     this.emit({ type: 'capo.online', sessione: p.session_id, cwd: p.cwd });
   }
 
-  assumi(p) {
+  // chiamante: l'impiegato che chiede aiuto a un collega (assente se assume il Capo)
+  assumi(p, chiamante) {
     const inp = p.tool_input || {};
     const tipo = nomeAgente(inp.subagent_type) || 'general-purpose';
     const id = p.tool_use_id || `t${Date.now().toString(36)}`;
@@ -155,12 +163,12 @@ export class Traduttore {
       // quello che ha scelto il Capo: i valori del roster sono solo consigli
       modello: inp.model || 'eredita',
       effort: inp.effort || 'sessione',
-      titolo, sessione: p.session_id, inBackground: !!inp.run_in_background,
+      titolo, sessione: p.session_id, inBackground: !!inp.run_in_background, chiamante,
     };
     this.agenti.set(id, a);
     this.inAttesa.push({ id, tipo, sessione: p.session_id });
     this.emit({ type: 'agente.assunto', ...a, incarico: corto(inp.prompt, 600) });
-    const percorso = reparto === 'esterni' ? ['capo', id] : ['capo', `reparto:${reparto}`, id];
+    const percorso = chiamante ? [chiamante, id] : reparto === 'esterni' ? ['capo', id] : ['capo', `reparto:${reparto}`, id];
     this.emit({ type: 'busta', pid: `${id}:in`, tipo: 'incarico', percorso, titolo, contenuto: corto(inp.prompt, 2000) });
   }
 
@@ -235,6 +243,7 @@ export class Traduttore {
 
     let percorso, tipo = 'report';
     if (a.ruolo === 'capo-reparto') { percorso = [a.nodo, 'capo']; tipo = 'verdetto'; }
+    else if (a.chiamante) percorso = [a.id, a.chiamante]; // la risposta torna al collega, senza revisione
     else if (a.reparto !== 'esterni' && b.affidabilita !== null && (b.affidabilita < soglia || b.revisione)) {
       percorso = [a.id, `reparto:${a.reparto}`];
       if (!this.daRivedere.has(a.reparto)) this.daRivedere.set(a.reparto, []);
