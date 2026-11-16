@@ -48,13 +48,13 @@ Campi comuni: `seq`, `ts`, `type`.
 | type | Campi | Origine |
 |---|---|---|
 | `capo.online` | `sessione`, `cwd` | PreToolUse della skill `sinapsi` |
-| `capo.richiesta` | `sessione`, `testo` | UserPromptSubmit della sessione Capo |
+| `capo.richiesta` | `sessione`, `testo` | UserPromptSubmit della sessione Capo. Le `<task-notification>` chiudono l'impiegato e non diventano richieste; i `<system-reminder>` si ignorano; i messaggi tra sessioni si mostrano senza XML. |
 | `agente.assunto` | `id`, `agente`, `nome`, `reparto`, `modello`, `effort`, `incarico`, `titolo` | PreToolUse dello strumento Agent |
 | `agente.al_lavoro` | `id`, `agentId` | SubagentStart |
 | `agente.stato` | `id`, `testo`, `strumento` | PreToolUse dentro il subagent |
 | `agente.pensiero` | `id`, `tipo` (pensiero, testo, strumento, risultato), `testo` | trascrizione del subagent |
 | `agente.token` | `id`, `input`, `output`, `cache`, `costo` | trascrizione del subagent |
-| `busta` | `pid`, `percorso`, `tipo` (incarico, report, verdetto), `affidabilita`, `esito`, `sintesi`, `contenuto` | PreToolUse e PostToolUse di Agent (anche tra colleghi) |
+| `busta` | `pid`, `percorso`, `tipo` (incarico, report, verdetto), `affidabilita`, `esito`, `revisione`, `verdetto`, `colleghi`, `sintesi`, `contenuto` | PreToolUse e PostToolUse di Agent (anche tra colleghi), SubagentStop o notifica di fine lavoro per gli impiegati in background |
 | `agente.finito` | `id`, `esito`, `affidabilita` | PostToolUse di Agent |
 | `agente.uscito` | `id` | dopo `agente.finito` (la web app anima l'uscita) |
 | `vacancy` | `vid`, `reparto`, `ruolo`, `motivo`, `modello` | `bin/sinapsi.js posizione-aperta` |
@@ -65,5 +65,6 @@ Gli identificativi dei nodi nella rete sono: `capo`, `reparto:<id>` (il capo rep
 ## Instradamento delle buste
 - incarico: Capo → capo reparto → impiegato (il passaggio dal capo reparto è solo visivo, per far vedere l'organigramma).
 - report con affidabilità ≥ soglia e revisione no: impiegato → Capo.
-- report sotto soglia, o con revisione sì: impiegato → capo reparto, poi il verdetto va dal capo reparto al Capo.
+- report completato sotto soglia, o con revisione sì: impiegato → capo reparto, poi il verdetto (confermato, corretto, respinto) va dal capo reparto al Capo.
+- report parziale o bloccato: impiegato → Capo, che lo riprende.
 - domanda tra colleghi: impiegato → collega, e la risposta torna all'impiegato senza revisione.

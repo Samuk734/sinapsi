@@ -11,7 +11,7 @@ Il lavoro di 39 impiegati, divisi in 19 reparti, si vede mentre accade, come **r
 
 [![Test](https://github.com/Samuk734/sinapsi/actions/workflows/test.yml/badge.svg)](https://github.com/Samuk734/sinapsi/actions/workflows/test.yml)
 ![Plugin Claude Code](https://img.shields.io/badge/Claude%20Code-plugin-d97757)
-![Versione](https://img.shields.io/badge/versione-0.2.1%20beta-7dd3fc)
+![Versione](https://img.shields.io/badge/versione-0.2.2%20beta-7dd3fc)
 [![Licenza MIT](https://img.shields.io/badge/licenza-MIT-34d399)](LICENSE)
 ![Lingua](https://img.shields.io/badge/lingua-italiano-ffcf73)
 
@@ -135,7 +135,7 @@ Delegare **non** riduce i token totali: un sistema multi-agente ne usa di più. 
 5. **Appunti di progetto**: i fatti verificati (comandi di build, percorsi, hardware, decisioni) finiscono in `.sinapsi/progetto.md`, e il prossimo impiegato non li deve ricostruire.
 6. **Zero token per la grafica**: tutto ciò che vedi nasce dagli hook, non da chiamate al modello.
 
-La dashboard mostra i token di lavoro e quanti sono rimasti **fuori dal contesto del Capo**.
+La dashboard mostra i **token nuovi** (input, output e scritture in cache), quelli **letti dalla cache** e quanti sono rimasti **fuori dal contesto del Capo**, cioè il contesto finale di ogni impiegato meno la sua busta.
 
 | Costo | Token |
 |---|---|
@@ -173,7 +173,7 @@ Ogni reparto ha un **capo reparto** che verifica le buste sotto soglia. L'organi
 
 ## Stato del progetto
 
-**0.2.1 beta.** Cosa è verificato:
+**0.2.2 beta.** Cosa è verificato:
 - la logica è coperta da test: traduzione degli hook, instradamento delle buste, componenti del plugin;
 - il plugin supera `claude plugin validate`;
 - le due viste girano sul simulatore.

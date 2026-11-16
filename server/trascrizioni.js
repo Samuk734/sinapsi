@@ -52,7 +52,9 @@ export class Trascrizioni {
     if (o?.type !== 'assistant' || !msg || !Array.isArray(msg.content)) return;
     for (const b of msg.content) {
       if (b.type === 'thinking' || b.type === 'redacted_thinking') {
-        this.onVoce(id, { tipo: 'pensiero', testo: (b.thinking || '').trim() || null });
+        // con il pensiero nascosto il testo arriva vuoto: una riga senza testo è solo rumore
+        const testo = (b.thinking || '').trim();
+        if (testo) this.onVoce(id, { tipo: 'pensiero', testo });
       } else if (b.type === 'text' && b.text?.trim()) {
         // il blocco <busta> arriva già come evento a sé: qui resta solo il testo
         const testo = b.text.replace(/<busta>[\s\S]*?<\/busta>/gi, '').trim();
@@ -62,13 +64,16 @@ export class Trascrizioni {
     if (msg.usage) {
       // Una risposta può occupare più righe con lo stesso id: vale l'ultima usage.
       s.usi.set(msg.id || `riga${s.usi.size}`, msg.usage);
-      const tot = { input: 0, output: 0, cache: 0, cacheScritta: 0 };
+      const tot = { input: 0, output: 0, cache: 0, cacheScritta: 0, contesto: 0 };
       for (const u of s.usi.values()) {
         tot.input += u.input_tokens || 0;
         tot.output += u.output_tokens || 0;
         tot.cache += u.cache_read_input_tokens || 0;
         tot.cacheScritta += u.cache_creation_input_tokens || 0;
       }
+      // contesto finale: quanto avrebbe occupato questo lavoro nella chat del Capo
+      const u = msg.usage;
+      tot.contesto = (u.input_tokens || 0) + (u.cache_read_input_tokens || 0) + (u.cache_creation_input_tokens || 0) + (u.output_tokens || 0);
       this.onToken(id, tot, msg.model);
     }
   }

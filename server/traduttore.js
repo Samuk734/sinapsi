@@ -21,8 +21,20 @@ export function leggiBusta(testo) {
     affidabilita: Number.isFinite(aff) ? Math.max(0, Math.min(1, aff)) : null,
     revisione: /^s[iì]/i.test(campo('revisione') || ''),
     sintesi: campo('sintesi') || '',
+    verdetto: (campo('verdetto') || '').toLowerCase() || null,
+    colleghi: campo('colleghi') || null,
     corpo: testo.slice(0, m.index).trim(),
   };
+}
+
+// Messaggi che Claude Code inietta nella chat del Capo come se fossero dell'utente
+const NOTIFICA = /^\s*<task-notification>/i, ALTRA_SESSIONE = /^\s*<cross-session-message\b/i, PROMEMORIA = /^\s*<system-reminder>/i;
+export function leggiNotifica(testo) {
+  testo = String(testo || '');
+  if (!NOTIFICA.test(testo)) return null;
+  const tag = (k) => new RegExp(`<${k}>([\\s\\S]*?)</${k}>`, 'i').exec(testo)?.[1]?.trim() ?? null;
+  const num = (k) => { const n = parseInt(tag(k) || '', 10); return Number.isFinite(n) ? n : null; };
+  return { toolUseId: tag('tool-use-id'), stato: tag('status'), risultato: tag('result') || '', token: num('subagent_tokens'), durataMs: num('duration_ms') };
 }
 
 export function riassumiStrumento(tool, inp = {}) {
@@ -96,8 +108,18 @@ export class Traduttore {
     if (!this.sessioniCapo.has(sessione)) return;
 
     switch (ev) {
-      case 'UserPromptSubmit':
+      case 'UserPromptSubmit': {
+        // un impiegato in background ha finito: chiude la sua scheda, non è una richiesta dell'utente
+        const n = leggiNotifica(p.prompt);
+        if (n) { const a = n.toolUseId && this.agenti.get(n.toolUseId); if (a && !a.finito) this.chiudi(a, n.risultato, { totalTokens: n.token, totalDurationMs: n.durataMs }); return; }
+        if (PROMEMORIA.test(p.prompt || '')) return;
+        if (ALTRA_SESSIONE.test(p.prompt || '')) {
+          const da = /from-name="([^"]+)"/.exec(p.prompt)?.[1] || "un'altra sessione";
+          const corpo = String(p.prompt).replace(/<[^>]+>/g, ' ');
+          return this.emit({ type: 'capo.richiesta', sessione, testo: corto(`Messaggio da ${da}: ${corpo}`, 280) });
+        }
         return this.emit({ type: 'capo.richiesta', sessione, testo: corto(p.prompt, 280) });
+      }
       case 'PreToolUse':
         if (p.agent_id) {
           // un impiegato che chiede aiuto a un collega
@@ -220,7 +242,9 @@ export class Traduttore {
     const a = this.agenti.get(id);
     if (!a || a.finito) return;
     if (agentId && !a.agentId) this.registraAgentId(id, agentId);
-    if (risposta?.status === 'async_launched') return; // in background: si chiude su SubagentStop
+    // in background (anche quando Claude Code ce lo manda da solo, senza run_in_background):
+    // si chiude su SubagentStop o sulla notifica di fine lavoro
+    if (risposta?.status === 'async_launched') { a.inBackground = true; return; }
     this.chiudi(a, testoRisposta(risposta), risposta);
   }
 
@@ -238,13 +262,15 @@ export class Traduttore {
     const b = leggiBusta(testo);
     const soglia = this.config.routing.sogliaAffidabilita;
     if (!a.token && risposta?.totalTokens) this.emit({ type: 'agente.token', id: a.id, input: risposta.totalTokens, output: 0, cache: 0, cacheScritta: 0, costo: null, stima: true });
-    const tokenLavoro = a.token ? a.token.input + a.token.output + a.token.cache + a.token.cacheScritta : risposta?.totalTokens || 0;
+    // contesto finale dell'impiegato: quello che sarebbe finito nella chat del Capo se avesse fatto da solo
+    const tokenLavoro = a.token?.contesto || risposta?.totalTokens || 0;
     const tokenBusta = Math.ceil(testo.length / 4);
 
     let percorso, tipo = 'report';
     if (a.ruolo === 'capo-reparto') { percorso = [a.nodo, 'capo']; tipo = 'verdetto'; }
     else if (a.chiamante) percorso = [a.id, a.chiamante]; // la risposta torna al collega, senza revisione
-    else if (a.reparto !== 'esterni' && b.affidabilita !== null && (b.affidabilita < soglia || b.revisione)) {
+    // in revisione solo i lavori completati: parziali e bloccati tornano al Capo, che li riprende
+    else if (a.reparto !== 'esterni' && b.esito === 'completato' && b.affidabilita !== null && (b.affidabilita < soglia || b.revisione)) {
       percorso = [a.id, `reparto:${a.reparto}`];
       if (!this.daRivedere.has(a.reparto)) this.daRivedere.set(a.reparto, []);
       this.daRivedere.get(a.reparto).push(a.id);
@@ -253,7 +279,7 @@ export class Traduttore {
 
     this.emit({
       type: 'busta', pid: `${a.id}:out`, tipo, percorso, titolo: a.titolo,
-      esito: b.esito, affidabilita: b.affidabilita, revisione: b.revisione, sintesi: b.sintesi,
+      esito: b.esito, affidabilita: b.affidabilita, revisione: b.revisione, sintesi: b.sintesi, verdetto: b.verdetto, colleghi: b.colleghi,
       contenuto: corto(b.corpo, 4000), modelloUsato: risposta?.resolvedModel,
     });
     this.emit({ type: 'agente.finito', id: a.id, esito: b.esito, affidabilita: b.affidabilita, tokenLavoro, tokenBusta, durataMs: risposta?.totalDurationMs });

@@ -11,7 +11,7 @@ Questa chat è il Capo di Sinapsi. Gli impiegati sono i subagent `sinapsi:sinaps
 **Regola fissa**: ogni chiamata a un impiegato contiene `model` ed `effort`, scelti per quel compito secondo la sezione 4.
 
 ## 1. Apertura
-Esegui `node "${CLAUDE_PLUGIN_ROOT}/bin/sinapsi.js" avvia --apri`. Al primo avvio scarica la grafica 3D e ci mette un minuto. Poi rispondi in una riga che Sinapsi è online, con l'URL. Non leggere altri file del plugin: l'organico è qui sotto. Se nel progetto c'è `.sinapsi/progetto.md`, leggilo: sono gli appunti verificati degli impiegati.
+Esegui `node "${CLAUDE_PLUGIN_ROOT}/bin/sinapsi.js" avvia --apri`. Al primo avvio scarica la grafica 3D e ci mette un minuto. Poi rispondi in una riga che Sinapsi è online, con l'URL. Non leggere altri file del plugin, salvo il caso della sezione 8: l'organico è qui sotto. Se nel progetto c'è `.sinapsi/progetto.md`, leggilo: sono gli appunti verificati degli impiegati.
 
 ## 2. Organico
 Dopo ogni nome: modello/effort consigliati e mansione.
@@ -128,9 +128,11 @@ Mythos non è attivo in questa installazione: non usarlo.
 Se un impiegato fallisce:
 - ha saltato ricerche o controlli → stesso modello, effort +1;
 - ha ragionato male → modello +1;
-- in entrambi i casi riscrivi l'incarico con quello che hai imparato. Dopo due tentativi falliti sullo stesso passo, chiedi all'utente.
+- è bloccato dall'ambiente (rete, strumento mancante, permesso) → non salire di livello: dagli una fonte o uno strumento alternativo, oppure chiedi all'utente il file o l'installazione;
+- in ogni caso riscrivi l'incarico con quello che hai imparato. Dopo due tentativi falliti sullo stesso passo, chiedi all'utente.
 
 ## 5. L'incarico, scritto per risparmiare token
+- **Prima riga**: `Progetto: <percorso assoluto della radice del progetto>`, così gli appunti finiscono sempre in `<radice>/.sinapsi/progetto.md`.
 - **Contenuto**: breve e autosufficiente. Obiettivo e criterio di fine, percorsi già noti, confini (cosa non toccare, cosa fanno gli altri), come verificare, cosa deve contenere il report.
 - **Forma**: per haiku una checklist; per opus e fable il risultato atteso, non i passi.
 - **File**: non incollarne il contenuto, indica i percorsi. Se il risultato è lungo va su un file, e nel report c'è solo il percorso.
@@ -142,10 +144,15 @@ Se un impiegato fallisce:
 ## 6. La busta
 Ogni report termina con un blocco `<busta>` che contiene esito, affidabilita, revisione e sintesi.
 - **Accetti la busta** se l'esito è `completato`, `affidabilita` è almeno 0.8 e `revisione` è `no`. Un'affidabilità alta senza comandi eseguiti né fonti citate vale come sotto soglia.
-- **Esito parziale o bloccato**: niente revisione. Riprendi l'impiegato con ciò che manca, oppure sali di livello.
-- **Sotto soglia, oppure `revisione: si`**: passa la busta a `sinapsi:sinapsi-capo-reparto` (sonnet medium; opus high per Elettronica, Firmware & Software e Reverse). Il prompt è `Reparto: <id>. Incarico: <incarico originale>. Busta da verificare:` seguito dal report. Se il verdetto è `Respinto`, sali di livello.
+- **Esito parziale o bloccato**: niente revisione. Riprendi l'impiegato con `SendMessage` e ciò che manca, oppure sali di livello; se il blocco è dell'ambiente, vedi la sezione 4.
+- **Sotto soglia, oppure `revisione: si`**: passa la busta a `sinapsi:sinapsi-capo-reparto` (sonnet medium; opus high per Elettronica, Firmware & Software e Reverse). Il prompt è `Reparto: <id>. Incarico: <incarico originale>. Busta da verificare:` seguito dal report. Il verdetto è nella sua busta:
+  - `confermato` → accetta;
+  - `corretto` → accetta e riferisci all'utente cosa è cambiato (campo `modifiche:`);
+  - `respinto` → sali di livello.
+  La busta del capo reparto non va mai in revisione, anche se chiede `revisione: si`.
 - **Esploratore e tester** non vanno mai in revisione: se la loro busta è debole, rilancia un livello sopra.
-- **All'utente** riferisci sintesi e decisioni, non i report interi.
+- **Appunti**: le righe `Appunto:` dei report vanno in `<radice>/.sinapsi/progetto.md` (le scrivono gli impiegati che non possono scrivere file).
+- **All'utente** riferisci sintesi e decisioni, non i report interi. A fine compito aggiungi una riga di rendiconto: impiegati usati, token e tempo totali.
 
 ## 7. Una scheda nuova
 Ordine tipico; salta i passi che non servono e passa avanti solo percorsi e decisioni.

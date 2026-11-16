@@ -83,6 +83,23 @@ try {
     tool_response: { status: 'completed', agentId: A, content: [{ type: 'text', text: testo }], resolvedModel: 'opus', totalTokens: 6200 } });
   await post('/hook', { ...comuni, hook_event_name: 'PreToolUse', tool_name: 'Agent', tool_use_id: 'toolu_senza_modello',
     tool_input: { subagent_type: 'sinapsi:sinapsi-tester', description: 'Senza modello', prompt: 'x' } });
+  // Claude Code avvia l'impiegato in background da solo (senza run_in_background): si chiude su SubagentStop
+  await post('/hook', { ...comuni, hook_event_name: 'PreToolUse', tool_name: 'Agent', tool_use_id: 'toolu_bg',
+    tool_input: { subagent_type: 'sinapsi:sinapsi-redattore', description: 'Scrive il changelog', prompt: 'x', model: 'sonnet', effort: 'low' } });
+  await post('/hook', { ...comuni, hook_event_name: 'SubagentStart', agent_id: 'bg1', agent_type: 'sinapsi:sinapsi-redattore' });
+  await post('/hook', { ...comuni, hook_event_name: 'PostToolUse', tool_name: 'Agent', tool_use_id: 'toolu_bg', tool_input: {}, tool_response: { status: 'async_launched', agentId: 'bg1' } });
+  await post('/hook', { ...comuni, hook_event_name: 'SubagentStop', agent_id: 'bg1', last_assistant_message: 'Fatto.\n<busta>\nesito: completato\naffidabilita: 0.95\nrevisione: no\nsintesi: changelog scritto\n</busta>' });
+  // un altro in background chiuso dalla notifica di fine lavoro, che non è una richiesta dell'utente
+  await post('/hook', { ...comuni, hook_event_name: 'PreToolUse', tool_name: 'Agent', tool_use_id: 'toolu_notifica',
+    tool_input: { subagent_type: 'sinapsi:sinapsi-esploratore', description: 'Trova i file', prompt: 'x', model: 'haiku', effort: 'low' } });
+  await post('/hook', { ...comuni, hook_event_name: 'PostToolUse', tool_name: 'Agent', tool_use_id: 'toolu_notifica', tool_input: {}, tool_response: { status: 'async_launched' } });
+  await post('/hook', { ...comuni, hook_event_name: 'UserPromptSubmit', prompt: '<task-notification>\n<task-id>a9</task-id>\n<tool-use-id>toolu_notifica</tool-use-id>\n<output-file>C:\\tmp\\x.output</output-file>\n<status>completed</status>\n<result>Trovati 3 file.\n<busta>\nesito: completato\naffidabilita: 0.9\nrevisione: no\nsintesi: tre file trovati\n</busta></result>\n<usage><subagent_tokens>4200</subagent_tokens><tool_uses>2</tool_uses><duration_ms>5000</duration_ms></usage>\n</task-notification>' });
+  await post('/hook', { ...comuni, hook_event_name: 'UserPromptSubmit', prompt: '<cross-session-message from="uds:x" from-name="review-sinapsi">Review pronta</cross-session-message>' });
+  await post('/hook', { ...comuni, hook_event_name: 'UserPromptSubmit', prompt: '<system-reminder>promemoria interno</system-reminder>' });
+  await post('/hook', { ...comuni, hook_event_name: 'PreToolUse', tool_name: 'Agent', tool_use_id: 'toolu_bloccato',
+    tool_input: { subagent_type: 'sinapsi:sinapsi-documentalista', description: 'Datasheet STM32G0', prompt: 'x', model: 'sonnet', effort: 'medium' } });
+  await post('/hook', { ...comuni, hook_event_name: 'PostToolUse', tool_name: 'Agent', tool_use_id: 'toolu_bloccato', tool_input: {},
+    tool_response: { status: 'completed', content: [{ type: 'text', text: 'st.com non risponde.\n<busta>\nesito: bloccato\naffidabilita: 0.25\nrevisione: si\nsintesi: fonte irraggiungibile\n</busta>' }] } });
   await attesa(300);
 
   const di = (t) => eventi.filter((e) => e.type === t);
@@ -100,7 +117,7 @@ try {
   await prova('collegamento SubagentStart', () => assert.equal(di('agente.al_lavoro')[0]?.id, T));
   await prova('nuvoletta di stato dal passo dell\'impiegato', () => assert.equal(di('agente.stato')[0]?.testo, 'Legge board.kicad_pcb'));
   await prova('pensiero letto dalla trascrizione', () => assert.ok(di('agente.pensiero').some((e) => e.tipo === 'pensiero' && /piani/.test(e.testo))));
-  await prova('token e costo dalla trascrizione', () => { const t = di('agente.token').at(-1); assert.equal(t.input, 1000); assert.ok(t.costo > 0); });
+  await prova('token e costo dalla trascrizione', () => { const t = di('agente.token').filter((e) => e.id === T).at(-1); assert.equal(t.input, 1000); assert.ok(t.costo > 0); });
   await prova('busta con affidabilità 0.65 instradata al capo reparto', () => {
     const b = di('busta').find((e) => e.pid === `${T}:out`);
     assert.deepEqual(b.percorso, [T, 'reparto:pcb']); assert.equal(b.affidabilita, 0.65);
@@ -111,7 +128,23 @@ try {
     assert.deepEqual(di('busta').find((e) => e.pid === 'toolu_collega:in')?.percorso, [T, 'toolu_collega']);
     assert.deepEqual(di('busta').find((e) => e.pid === 'toolu_collega:out')?.percorso, ['toolu_collega', T]);
   });
-  await prova('fine lavoro e uscita', () => { assert.equal(di('agente.finito').length, 2); assert.equal(di('agente.uscito').length, 2); });
+  await prova('fine lavoro e uscita', () => {
+    for (const id of [T, 'toolu_collega', 'toolu_bg', 'toolu_notifica']) assert.ok(di('agente.uscito').some((e) => e.id === id), id);
+  });
+  await prova('impiegato messo in background da Claude Code: chiuso su SubagentStop', () => {
+    assert.equal(di('busta').find((e) => e.pid === 'toolu_bg:out')?.sintesi, 'changelog scritto');
+  });
+  await prova('notifica di fine lavoro: chiude la scheda e non diventa una richiesta', () => {
+    assert.equal(di('busta').find((e) => e.pid === 'toolu_notifica:out')?.affidabilita, 0.9);
+    assert.equal(di('agente.finito').find((e) => e.id === 'toolu_notifica')?.tokenLavoro, 4200);
+    assert.ok(!di('capo.richiesta').some((e) => /task-notification|system-reminder|promemoria/.test(e.testo)));
+  });
+  await prova('busta bloccata: torna al Capo senza revisione', () => {
+    assert.deepEqual(di('busta').find((e) => e.pid === 'toolu_bloccato:out')?.percorso, ['toolu_bloccato', 'capo']);
+  });
+  await prova('messaggio da un\'altra sessione mostrato senza XML', () => {
+    assert.ok(di('capo.richiesta').some((e) => e.testo === 'Messaggio da review-sinapsi: Review pronta'));
+  });
 } finally {
   server.kill();
 }

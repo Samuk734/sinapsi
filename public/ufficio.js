@@ -448,7 +448,7 @@ function gestisci(e, istantaneo = false) {
       }
       break;
     }
-    case 'agente.token': conta.token.set(e.id, (e.input || 0) + (e.output || 0) + (e.cache || 0) + (e.cacheScritta || 0)); break;
+    case 'agente.token': conta.token.set(e.id, { nuovi: (e.input || 0) + (e.output || 0) + (e.cacheScritta || 0), cache: e.cache || 0 }); break;
     case 'agente.finito': conta.risparmio += Math.max(0, (e.tokenLavoro || 0) - (e.tokenBusta || 0)); break;
     case 'busta': {
       conta.buste++;
@@ -476,9 +476,10 @@ function apriImpiegato(id) {
 const $ = (id) => document.getElementById(id);
 function metriche() {
   const ora = performance.now(); conta.pensieri = conta.pensieri.filter((x) => ora - x < 60000);
-  const tok = [...conta.token.values()].reduce((a, b) => a + b, 0);
+  // token nuovi (input, output, scritture in cache) e letture dalla cache, separati: sommati gonfiano il conto
+  const tok = [...conta.token.values()].reduce((a, b) => a + b.nuovi, 0), cache = [...conta.token.values()].reduce((a, b) => a + b.cache, 0);
   const presenti = [...impiegati.values()].filter((i) => !i.capoRep).length;
-  P.metriche([['in ufficio', presenti], ['in revisione', impiegati.size - presenti], ['pensieri/min', conta.pensieri.length], ['buste', conta.buste], ['token lavoro', tok], ['fuori dal Capo', conta.risparmio]]);
+  P.metriche([['in ufficio', presenti], ['in revisione', impiegati.size - presenti], ['pensieri/min', conta.pensieri.length], ['buste', conta.buste], ['token nuovi', tok], ['da cache', cache], ['fuori dal Capo', conta.risparmio]]);
   $('ritmo').textContent = `${conta.pensieri.length}/min`;
 }
 let demoOn = false;
