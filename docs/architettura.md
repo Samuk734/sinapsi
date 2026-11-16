@@ -29,7 +29,8 @@
 | `bin/sinapsi.js` | CLI: `avvia`, `stato`, `apri`, `demo`, `posizione-aperta`. |
 | `scripts/build.js` | Genera `agents/` e `skills/` dal roster. Con `--check` verifica che siano aggiornati (CI). |
 | `.claude-plugin/` | Manifest del plugin e del marketplace (la repo è installabile con `/plugin marketplace add`). |
-| `hooks/hooks.json` | Collega i sensori agli eventi di Claude Code, in modalità asincrona. |
+| `hooks/hooks.json` | Collega i sensori agli eventi di Claude Code, in modalità asincrona, e carica il modulo dell'interruttore. |
+| `hooks/interruttore.tsx` + `types/index.d.ts` | Pannello "Sinapsi" nell'app, voce nella riga di stato e comando `/sinapsi-interruttore`. Da spento nasconde gli agenti `sinapsi:*` (`agent.offer`) e sostituisce il testo della skill (`skill.prompt`); lo stato resta in `$.store`. |
 
 ## Perché questa architettura fa risparmiare token
 1. **Contesto del Capo pulito**: il lavoro degli impiegati (letture, output dei comandi) resta nel loro contesto; al Capo arriva solo la busta.

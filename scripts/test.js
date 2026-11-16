@@ -153,6 +153,15 @@ await prova('manifest e hook del plugin coerenti', () => {
   for (const ev of ['PreToolUse', 'PostToolUse', 'SubagentStart', 'SubagentStop']) assert.ok(hooks[ev]?.[0].hooks[0].async, ev);
   assert.ok(Object.values(hooks).flat().every((g) => g.hooks.every((h) => h.async)), 'nessun hook deve bloccare Claude');
 });
+await prova('interruttore: modulo nel plugin accanto alle hook classiche', () => {
+  const h = JSON.parse(fs.readFileSync(path.join(HQ, 'hooks/hooks.json'), 'utf8'));
+  const plugin = JSON.parse(fs.readFileSync(path.join(HQ, '.claude-plugin/plugin.json'), 'utf8'));
+  assert.deepEqual(h.modules, ['./interruttore.tsx']); assert.ok(h.hooks.PreToolUse, 'le hook classiche restano');
+  assert.equal(plugin.types, './types/index.d.ts');
+  const m = fs.readFileSync(path.join(HQ, 'hooks/interruttore.tsx'), 'utf8');
+  assert.match(m, /agent\.offer/); assert.match(m, /plugin: 'sinapsi'/);
+  assert.match(fs.readFileSync(path.join(HQ, 'types/index.d.ts'), 'utf8'), /sinapsi: \{ acceso: boolean \}/);
+});
 await prova('la skill impone model ed effort a ogni chiamata', () => {
   assert.match(generati.get('skills/apri/SKILL.md'), /Regola fissa.*`model` ed `effort`/);
 });

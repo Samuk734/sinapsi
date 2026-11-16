@@ -1,6 +1,6 @@
 {
   "name": "sinapsi",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Un'azienda di 39 agenti specializzati per Claude Code, con il cuore nell'elettronica: la chat diventa il Capo, sceglie impiegato, modello ed effort, e tutto si vede dal vivo in 3D come rete neurale o come ufficio.",
   "author": {
     "name": "Samuk734",
@@ -9,5 +9,14 @@
   "homepage": "https://github.com/Samuk734/sinapsi",
   "repository": "https://github.com/Samuk734/sinapsi",
   "license": "MIT",
-  "keywords": ["subagents", "orchestration", "dashboard", "3d", "visualization", "multi-agent", "italiano"]
+  "keywords": [
+    "subagents",
+    "orchestration",
+    "dashboard",
+    "3d",
+    "visualization",
+    "multi-agent",
+    "italiano"
+  ],
+  "types": "./types/index.d.ts"
 }

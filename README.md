@@ -11,7 +11,7 @@ Il lavoro di 39 impiegati, divisi in 19 reparti, si vede mentre accade, come **r
 
 [![Test](https://github.com/Samuk734/sinapsi/actions/workflows/test.yml/badge.svg)](https://github.com/Samuk734/sinapsi/actions/workflows/test.yml)
 ![Plugin Claude Code](https://img.shields.io/badge/Claude%20Code-plugin-d97757)
-![Versione](https://img.shields.io/badge/versione-0.2.0%20beta-7dd3fc)
+![Versione](https://img.shields.io/badge/versione-0.2.1%20beta-7dd3fc)
 [![Licenza MIT](https://img.shields.io/badge/licenza-MIT-34d399)](LICENSE)
 ![Lingua](https://img.shields.io/badge/lingua-italiano-ffcf73)
 
@@ -56,7 +56,7 @@ Ogni impiegato chiude il lavoro con una **busta** che contiene esito, sintesi e 
 
 | Cosa | Versione | A cosa serve |
 |---|---|---|
-| **[Claude Code](https://code.claude.com)** | 2.1.292 o successiva (provato con la 2.1.323) | Il Capo e gli impiegati. Dalla 2.1.292 si può scegliere l'effort a ogni chiamata. |
+| **[Claude Code](https://code.claude.com)** | 2.1.323 o successiva (provato con la 2.1.323): serve per l'interruttore e per i colleghi | Il Capo e gli impiegati. Dalla 2.1.292 si può scegliere l'effort a ogni chiamata. |
 | **[Node.js](https://nodejs.org)** con npm | 20 o successiva (npm è incluso nell'installer) | Il server locale della dashboard e i sensori. |
 | **[Git](https://git-scm.com)** | qualsiasi recente | Claude Code lo usa per scaricare il plugin da GitHub. |
 | **Browser con WebGL 2** | Chrome, Edge o Firefox recenti | La dashboard 3D. Basta una grafica integrata; l'ufficio, con ombre e occlusione ambientale, è la vista più pesante. |
@@ -139,9 +139,15 @@ La dashboard mostra i token di lavoro e quanti sono rimasti **fuori dal contesto
 
 | Costo | Token |
 |---|---|
-| Fisso per ogni sessione (descrizioni di skill e agenti) | ~3.500 |
+| Fisso per ogni sessione (descrizioni di skill e agenti) | ~3.500, zero con l'interruttore spento |
 | Aprire Sinapsi (istruzioni del Capo) | ~6.500 |
 | Ogni impiegato chiamato (contesto iniziale, prompt e strumenti compresi) | ~6.000–17.000 |
+
+### Interruttore
+
+Nell'app desktop di Claude, accanto alla chat, compare il pannello **Sinapsi** con lo stato e il pulsante **Spegni / Accendi**. La riga di stato mostra "Sinapsi ● acceso" o "○ spento", e nel terminale c'è il comando `/sinapsi-interruttore`.
+
+Da spento gli impiegati spariscono dall'elenco degli agenti, quindi non costano token fissi, e la skill del Capo risponde solo che Sinapsi è spento. Le hook della dashboard restano. Lo stato si ricorda tra una sessione e l'altra. Ogni cambio ricostruisce l'elenco degli agenti, al costo di una sola rottura della cache del prompt.
 
 ## L'organico
 
@@ -167,7 +173,7 @@ Ogni reparto ha un **capo reparto** che verifica le buste sotto soglia. L'organi
 
 ## Stato del progetto
 
-**0.2.0 beta.** Cosa è verificato:
+**0.2.1 beta.** Cosa è verificato:
 - la logica è coperta da test: traduzione degli hook, instradamento delle buste, componenti del plugin;
 - il plugin supera `claude plugin validate`;
 - le due viste girano sul simulatore.
