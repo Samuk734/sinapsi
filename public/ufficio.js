@@ -451,13 +451,13 @@ function gestisci(e, istantaneo = false) {
     case 'agente.token': conta.token.set(e.id, { nuovi: (e.input || 0) + (e.output || 0) + (e.cacheScritta || 0), cache: e.cache || 0 }); break;
     case 'agente.finito': conta.risparmio += Math.max(0, (e.tokenLavoro || 0) - (e.tokenBusta || 0)); break;
     case 'busta': {
-      conta.buste++;
+      if (e.tipo !== 'incarico') conta.buste++; // si contano i report consegnati, non gli incarichi
       if (e.tipo !== 'incarico') { const imp = impiegati.get(e.pid?.replace(/:out$/, '')); if (imp) attivitaRep.set(imp.stanza.rep.id, { ...(attivitaRep.get(imp.stanza.rep.id) || { righe: [] }), busta: { testo: e.sintesi || e.titolo, colore: coloreAffidabilita(e.affidabilita) } }); }
       if (!istantaneo) { lanciaBusta(e); P.ticker(e); }
       break;
     }
     case 'agente.uscito': congeda(e, istantaneo); break;
-    case 'capo.richiesta': capoOm?.bolla.dici(e.testo, '#ffcf73'); if (!istantaneo) P.richiesta(e.testo); break;
+    case 'capo.richiesta': capoOm?.bolla.dici(e.testo, '#ffcf73'); if (!istantaneo) P.richiesta(e); break;
     case 'capo.stato': capoOm?.bolla.dici(e.testo, '#ffcf73'); break;
     case 'vacancy': if (!istantaneo) P.posizione(e); break;
     case 'demo': statoDemo(e.attiva); break;
@@ -479,7 +479,7 @@ function metriche() {
   // token nuovi (input, output, scritture in cache) e letture dalla cache, separati: sommati gonfiano il conto
   const tok = [...conta.token.values()].reduce((a, b) => a + b.nuovi, 0), cache = [...conta.token.values()].reduce((a, b) => a + b.cache, 0);
   const presenti = [...impiegati.values()].filter((i) => !i.capoRep).length;
-  P.metriche([['in ufficio', presenti], ['in revisione', impiegati.size - presenti], ['pensieri/min', conta.pensieri.length], ['buste', conta.buste], ['token nuovi', tok], ['da cache', cache], ['fuori dal Capo', conta.risparmio]]);
+  P.metriche([['in ufficio', presenti], ['in revisione', impiegati.size - presenti], ['pensieri/min', conta.pensieri.length], ['report', conta.buste], ['token nuovi', tok], ['da cache', cache], ['fuori dal Capo', conta.risparmio]]);
   $('ritmo').textContent = `${conta.pensieri.length}/min`;
 }
 let demoOn = false;
@@ -606,5 +606,5 @@ console.info('[ufficio] geometria statica unita:', fondiStatici());
 personaggiFissi();
 P = creaPannelli({ azienda, nomeDi, vaiA: (s) => { const imp = impiegati.get(s.id); if (imp) segui(imp.om); else { const st = stanze.get(s.info.reparto); if (st) volaA(new THREE.Vector3(st.cx, 0, st.cz), 14); } } });
 metriche(); setInterval(metriche, 500);
-collegaStream({ replay: (d) => { statoDemo(d.demo); for (const e of d.eventi) gestisci(e, true); }, evento: (e) => gestisci(e) });
+collegaStream({ replay: (d) => { statoDemo(d.demo); for (const e of d.eventi) gestisci(e, true); P.ripristinaFlusso(d.eventi); }, evento: (e) => gestisci(e) });
 ciclo();

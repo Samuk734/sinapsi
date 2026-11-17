@@ -3,6 +3,30 @@
 // difensivo e, se qualcosa non torna, si limita a non produrre eventi.
 import fs from 'node:fs';
 
+// Ultima richiesta vera dell'utente nella trascrizione del Capo. Serve quando la dashboard parte
+// dopo il messaggio che l'ha aperta: quel UserPromptSubmit non è mai arrivato al server.
+export function ultimaRichiesta(file, max = 1 << 20) {
+  try {
+    const size = fs.statSync(file).size, da = Math.max(0, size - max);
+    const fd = fs.openSync(file, 'r'), buf = Buffer.alloc(size - da);
+    fs.readSync(fd, buf, 0, buf.length, da); fs.closeSync(fd);
+    const righe = buf.toString('utf8').split('\n');
+    for (let i = righe.length - 1; i >= (da ? 1 : 0); i--) {
+      let o; try { o = JSON.parse(righe[i]); } catch { continue; }
+      if (o?.type !== 'user' || o.isMeta || o.isSidechain || o.message?.role !== 'user') continue;
+      const c = o.message.content;
+      if (Array.isArray(c) && c.some((b) => b?.type === 'tool_result')) continue;
+      let testo = (typeof c === 'string' ? c : Array.isArray(c) ? c.filter((b) => b?.type === 'text').map((b) => b.text).join('\n') : '').trim();
+      if (!testo || /^<(task-notification|system-reminder|local-command)/i.test(testo)) continue;
+      const nome = /<command-name>([\s\S]*?)<\/command-name>/i.exec(testo)?.[1]?.trim();
+      const args = /<command-args>([\s\S]*?)<\/command-args>/i.exec(testo)?.[1]?.trim();
+      if (nome) testo = args ? `${nome} ${args}` : nome;
+      return testo;
+    }
+  } catch { /* trascrizione assente o illeggibile */ }
+  return null;
+}
+
 export class Trascrizioni {
   constructor({ onVoce, onToken, intervallo = 500 }) {
     this.onVoce = onVoce;

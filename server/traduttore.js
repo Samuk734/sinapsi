@@ -1,7 +1,7 @@
 // Traduce i payload degli hook di Claude Code in eventi dell'azienda Sinapsi.
 // Formato degli hook: https://code.claude.com/docs/en/hooks.md
 import path from 'node:path';
-import { Trascrizioni } from './trascrizioni.js';
+import { Trascrizioni, ultimaRichiesta } from './trascrizioni.js';
 
 const STRUMENTI_AGENTE = new Set(['Agent', 'Task']);
 const CAPO_REPARTO = 'sinapsi-capo-reparto';
@@ -113,12 +113,7 @@ export class Traduttore {
         const n = leggiNotifica(p.prompt);
         if (n) { const a = n.toolUseId && this.agenti.get(n.toolUseId); if (a && !a.finito) this.chiudi(a, n.risultato, { totalTokens: n.token, totalDurationMs: n.durataMs }); return; }
         if (PROMEMORIA.test(p.prompt || '')) return;
-        if (ALTRA_SESSIONE.test(p.prompt || '')) {
-          const da = /from-name="([^"]+)"/.exec(p.prompt)?.[1] || "un'altra sessione";
-          const corpo = String(p.prompt).replace(/<[^>]+>/g, ' ');
-          return this.emit({ type: 'capo.richiesta', sessione, testo: corto(`Messaggio da ${da}: ${corpo}`, 280) });
-        }
-        return this.emit({ type: 'capo.richiesta', sessione, testo: corto(p.prompt, 280) });
+        return this.richiesta(sessione, p.prompt);
       }
       case 'PreToolUse':
         if (p.agent_id) {
@@ -152,10 +147,24 @@ export class Traduttore {
   }
 
   // --- Ciclo di vita ------------------------------------------------------
+  // richiesta dell'utente, oppure messaggio arrivato da un'altra sessione di Claude Code
+  richiesta(sessione, prompt, extra = {}) {
+    prompt = String(prompt || '');
+    if (ALTRA_SESSIONE.test(prompt)) {
+      const da = /from-name="([^"]+)"/.exec(prompt)?.[1] || "un'altra sessione";
+      const corpo = prompt.replace(/<[^>]+>/g, ' ');
+      return this.emit({ type: 'capo.richiesta', sessione, origine: 'sessione', da, testo: corto(`Messaggio da ${da}: ${corpo}`, 280), ...extra });
+    }
+    return this.emit({ type: 'capo.richiesta', sessione, origine: 'utente', testo: corto(prompt, 280), ...extra });
+  }
+
   capoOnline(p) {
     if (this.sessioniCapo.has(p.session_id)) return;
     this.sessioniCapo.set(p.session_id, { cwd: p.cwd, trascrizione: p.transcript_path });
     this.emit({ type: 'capo.online', sessione: p.session_id, cwd: p.cwd });
+    // la richiesta che ha aperto Sinapsi è arrivata prima del server: la si recupera dalla trascrizione
+    const testo = p.transcript_path ? ultimaRichiesta(p.transcript_path) : null;
+    if (testo) this.richiesta(p.session_id, testo, { recuperata: true });
   }
 
   // chiamante: l'impiegato che chiede aiuto a un collega (assente se assume il Capo)

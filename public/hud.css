@@ -70,6 +70,7 @@ kbd { font: 9px var(--mono); padding: 1px 4px; border: 1px solid var(--bordo); b
 .ticker .bst b { font: 700 11px var(--mono); color: var(--m); }
 .ticker .bst span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .richiesta { position: fixed; top: 84px; left: 50%; transform: translateX(-50%); z-index: 4; max-width: 46vw; text-align: center; font: 500 13px var(--sans); color: #ffe6b0; padding: 8px 18px; background: rgba(255,207,115,.08); border: 1px solid rgba(255,207,115,.3); border-radius: 3px; backdrop-filter: blur(10px); transition: opacity .8s; }
+.richiesta.sessione { color: #d6efff; background: rgba(125,211,252,.08); border-color: rgba(125,211,252,.3); }
 .richiesta b { font: 700 9px var(--mono); letter-spacing: .3em; color: var(--oro); display: block; margin-bottom: 2px; }
 .mirino { position: fixed; left: 50%; top: 50%; width: 28px; height: 28px; margin: -14px; border: 1px solid rgba(125,211,252,.7); border-radius: 50%; z-index: 4; pointer-events: none; box-shadow: 0 0 12px rgba(125,211,252,.5); }
 .posizione { position: fixed; right: 12px; bottom: 74px; width: 340px; padding: 14px; z-index: 7; animation: entra .4s; }
@@ -143,6 +144,11 @@ body.senza-destra .destra { transform: translateX(110%); opacity: 0; pointer-eve
 .rm-richiesta { margin: 4px 0 10px; padding: 10px 12px; border: 1px solid rgba(255,207,115,.35); background: rgba(255,207,115,.07); font-size: 12.5px; line-height: 1.4; color: #ffe6b0; }
 .rm-richiesta b { display: block; font: 700 9px var(--mono); letter-spacing: .25em; text-transform: uppercase; color: var(--oro); }
 .rm-richiesta .ora { font: 10px var(--mono); color: var(--tenue); }
+/* messaggi da un'altra sessione e richieste non recuperate: azzurro e grigio, non oro come le richieste dell'utente */
+.rm-richiesta.sessione { border-color: rgba(125,211,252,.35); background: rgba(125,211,252,.06); color: #d6efff; }
+.rm-richiesta.sessione b, .richiesta.sessione b { color: #7dd3fc; }
+.rm-richiesta.stato { border-color: rgba(135,146,184,.3); background: rgba(135,146,184,.05); color: var(--tenue); }
+.rm-richiesta.stato b { color: var(--tenue); }
 .conn { border: 1px solid var(--bordo); border-left: 3px solid var(--c); margin: 0 0 7px; background: rgba(255,255,255,.02); }
 .conn .testa { display: flex; align-items: center; gap: 8px; padding: 8px 10px; cursor: pointer; }
 .conn .testa:hover { background: rgba(255,255,255,.04); }

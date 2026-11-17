@@ -11,7 +11,7 @@ Il lavoro di 39 impiegati, divisi in 19 reparti, si vede mentre accade, come **r
 
 [![Test](https://github.com/Samuk734/sinapsi/actions/workflows/test.yml/badge.svg)](https://github.com/Samuk734/sinapsi/actions/workflows/test.yml)
 ![Plugin Claude Code](https://img.shields.io/badge/Claude%20Code-plugin-d97757)
-![Versione](https://img.shields.io/badge/versione-0.2.2%20beta-7dd3fc)
+![Versione](https://img.shields.io/badge/versione-0.2.3%20beta-7dd3fc)
 [![Licenza MIT](https://img.shields.io/badge/licenza-MIT-34d399)](LICENSE)
 ![Lingua](https://img.shields.io/badge/lingua-italiano-ffcf73)
 
@@ -90,7 +90,7 @@ In una sessione di Claude Code:
 /plugin install sinapsi@sinapsi
 ```
 
-Riavvia la sessione. Poi, in qualsiasi progetto, scrivi **"apri Sinapsi"** oppure `/sinapsi:apri`. La prima volta la dashboard scarica la grafica 3D (three.js, circa 30 MB) e si apre nel browser su `http://localhost:7420`.
+Riavvia la sessione. Poi, in qualsiasi progetto, scrivi **"apri Sinapsi"** oppure `/sinapsi:apri`. La prima volta la dashboard scarica la grafica 3D (three.js, circa 30 MB) e si apre nel browser su `http://localhost:7420`. Dopo un aggiornamento del plugin, il server della dashboard rimasto acceso con la versione precedente si riavvia da solo.
 
 <details>
 <summary><b>Provarlo senza installarlo</b></summary>
@@ -122,7 +122,8 @@ flowchart LR
 - **Il modello lo sceglie davvero il Capo**: gli impiegati non ne hanno uno proprio, e la skill impone al Capo di passare modello ed effort a ogni chiamata, scegliendo la coppia più leggera che fa bene il lavoro. Se se ne dimentica, l'impiegato usa il modello della sessione e la dashboard lo mostra come "eredita".
 - **Elettronica, firmware, software e reverse su modelli di punta**: lì il Capo parte da Opus xhigh o Fable, perché un errore su una scheda costa più dei token. Haiku resta per cercare file e lanciare i test.
 - **Colleghi**: un impiegato può chiedere un'informazione a un collega (al massimo due per incarico) e la risposta torna a lui, senza passare dal Capo.
-- **Gli hook non bloccano mai Claude**: sono asincroni, girano in background e, se la dashboard è chiusa, terminano subito.
+- **Gli hook della dashboard non bloccano mai Claude**: sono asincroni, girano in background e, se la dashboard è chiusa, terminano subito.
+- **La guardia** è l'unica hook che può fermare un comando, e vale solo per gli impiegati di Sinapsi. Blocca due cose: chiudere processi scelti dalla lista di sistema, che possono essere di altre sessioni, e installare pacchetti globali senza il tuo ok. Per Python resta permesso un venv in `.sinapsi/venv`. Costa circa 0,1 secondi per comando Bash.
 - **Il pensiero** degli impiegati si legge dalle loro trascrizioni locali, quando Claude Code lo registra.
 
 ### Il risparmio di token, onestamente
@@ -173,8 +174,9 @@ Ogni reparto ha un **capo reparto** che verifica le buste sotto soglia. L'organi
 
 ## Stato del progetto
 
-**0.2.2 beta.** Cosa è verificato:
-- la logica è coperta da test: traduzione degli hook, instradamento delle buste, componenti del plugin;
+**0.2.3 beta.** Cosa è verificato:
+- la logica è coperta da test: traduzione degli hook, instradamento delle buste, guardia, componenti del plugin;
+- due review fatte con Sinapsi stesso in un'altra sessione. Nell'ultima l'area Reverse ha ricostruito il sorgente C di un programma di prova protetto con VMProtect (demo), e il sorgente si comporta come l'originale anche nelle esecuzioni reali; due impiegati si sono passati il lavoro tramite i colleghi;
 - il plugin supera `claude plugin validate`;
 - le due viste girano sul simulatore.
 
@@ -190,10 +192,10 @@ Ancora da fare:
 .claude-plugin/   manifest del plugin e del marketplace, icona
 skills/apri/      la skill del Capo           (generata da roster/skill.template.md)
 agents/           i 39 impiegati e il capo reparto (generati da roster/agenti + blocchi comuni)
-hooks/            hooks.json ed emit.js, i sensori
+hooks/            hooks.json, emit.js (i sensori), guardia.js, interruttore.tsx
 server/           server locale, traduttore degli hook, lettore delle trascrizioni, simulatore
 public/           la dashboard: rete neurale e ufficio (three.js)
-bin/sinapsi.js    CLI: avvia, stato, demo, posizione-aperta
+bin/sinapsi.js    CLI: avvia, riavvia, ferma, stato, demo, posizione-aperta
 roster/           organico, prompt e contratto: modifica qui, poi npm run build
 docs/             architettura e ricerca sulle regole di scelta
 ```
@@ -206,7 +208,7 @@ Sinapsi is a **Claude Code plugin** that turns your chat into "the Boss" of a co
 
 The UI and the prompts are in Italian.
 
-Requirements: Claude Code 2.1.292 or later, Node.js 20 or later with npm, Git, a WebGL 2 browser, and internet access on the first launch. Install it with `/plugin marketplace add Samuk734/sinapsi`, then `/plugin install sinapsi@sinapsi`, and say "apri Sinapsi". To try the dashboard without Claude: `npm install && npm run demo`.
+Requirements: Claude Code 2.1.323 or later, Node.js 20 or later with npm, Git, a WebGL 2 browser, and internet access on the first launch. Install it with `/plugin marketplace add Samuk734/sinapsi`, then `/plugin install sinapsi@sinapsi`, and say "apri Sinapsi". To try the dashboard without Claude: `npm install && npm run demo`.
 
 ## Licenza
 

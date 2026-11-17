@@ -681,7 +681,7 @@ function cresci(n, ist, e, t, istantaneo) {
   }
   if (!istantaneo) {
     carta(rec, tipo);
-    voceCoscienza(rec, n);
+    if (tipo !== 'risultato') voceCoscienza(rec, n); // nel flusso niente output degli strumenti
   }
   conta.nodi = memoria.n;
 }
@@ -746,7 +746,7 @@ function gestisci(e, istantaneo = false) {
     }
     case 'agente.finito': conta.risparmio += Math.max(0, (e.tokenLavoro || 0) - (e.tokenBusta || 0)); break;
     case 'busta': {
-      conta.buste++;
+      if (e.tipo !== 'incarico') conta.buste++; // si contano i report consegnati, non gli incarichi
       if (!istantaneo) {
         const seg = segmentiPercorso(e.percorso);
         if (seg.length) impulsi.push(new Impulso(e, seg, e.tipo === 'incarico' ? '#7dd3fc' : coloreAffidabilita(e.affidabilita)));
@@ -763,7 +763,7 @@ function gestisci(e, istantaneo = false) {
     }
     case 'capo.richiesta': {
       const capo = nodi.get('capo'); capo.colpo(2);
-      if (!istantaneo) { richiesta(e.testo); onda(capo.pos, capo.colore, 45); scintille(capo.pos, capo.colore, 60); }
+      if (!istantaneo) { richiesta(e); onda(capo.pos, capo.colore, 45); scintille(capo.pos, capo.colore, 60); }
       break;
     }
     case 'vacancy': if (!istantaneo) posizione(e); break;
@@ -783,7 +783,7 @@ function metriche() {
   // token nuovi (input, output, scritture in cache) e letture dalla cache, separati: sommati gonfiano il conto
   const tok = [...conta.token.values()].reduce((a, b) => a + b.nuovi, 0), cache = [...conta.token.values()].reduce((a, b) => a + b.cache, 0);
   P.metriche([['agenti svegli', istanze.size], ['nodi', memoria.n], ['memoria', sapere.size], ['pensieri/min', conta.pensieri.length],
-    ['buste', conta.buste], ['token nuovi', tok], ['da cache', cache], ['fuori dal Capo', conta.risparmio]]);
+    ['report', conta.buste], ['token nuovi', tok], ['da cache', cache], ['fuori dal Capo', conta.risparmio]]);
   $('ritmo').textContent = `${conta.pensieri.length}/min`;
 }
 function voceCoscienza(rec, n) { P.voce({ nome: n.nome, colore: hex(n.colore), tipo: rec.tipo, testo: rec.testo, onclick: () => { volaVerso(rec.pos, 16); apriNodo(rec); } }); }
@@ -966,6 +966,7 @@ collegaStream({
     for (const e of d.eventi) gestisci(e, true);
     memoria.fineBlocco();
     for (const s of sapere.values()) etichettaSapere(s);
+    P.ripristinaFlusso(d.eventi);
   },
   evento: (e) => gestisci(e),
 });

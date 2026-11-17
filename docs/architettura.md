@@ -22,14 +22,15 @@
 | `roster/contratto-colleghi.md` | Come chiedere un'informazione a un collega con lo strumento Agent, con l'elenco compatto dei colleghi. Il build aggiunge `Agent` agli strumenti di tutti tranne capo reparto, esploratore e tester. |
 | `roster/contratto-reverse.md` | Contesto e limiti del reverse (scopo dichiarato, linguaggio neutro, niente dump grezzi nel contesto, quando fermarsi), aggiunto agli impiegati dell'area Reverse. |
 | `hooks/emit.js` | Sensore: inoltra il payload dell'hook al server. Non scrive mai su stdout ed esce sempre con 0. |
-| `server/server.js` | HTTP + SSE su porta 7420, replay degli eventi alla connessione, file statici. |
+| `hooks/guardia.js` | Unica hook sincrona, su Bash e PowerShell, solo per gli impiegati (`agent_type` sinapsi:*). Nega i comandi che chiudono processi scelti dalla lista di sistema (ammessi `$!`, i job della shell e i PID salvati in `.sinapsi/pid/`) e le installazioni globali (ammesso un venv). Nel dubbio lascia passare. |
+| `server/server.js` | HTTP + SSE su porta 7420, replay degli eventi alla connessione, file statici. `/health` riporta versione e PID; `POST /api/spegni` lo chiude in modo ordinato. |
 | `server/traduttore.js` | Traduce gli hook (formato Claude Code) in eventi Sinapsi. Tiene la mappa tool_use_id ↔ agent_id e riconosce le chiamate tra colleghi (Agent lanciato da un impiegato). |
-| `server/trascrizioni.js` | Legge in coda i JSONL dei subagent: pensiero, testo, strumenti, token. |
+| `server/trascrizioni.js` | Legge in coda i JSONL dei subagent: pensiero, testo, strumenti, token. Recupera dalla trascrizione del Capo la richiesta arrivata prima che il server partisse. |
 | `server/demo.js` | Simulatore: produce hook e trascrizioni finti realistici, così la UI si vede anche senza Claude. |
-| `bin/sinapsi.js` | CLI: `avvia`, `stato`, `apri`, `demo`, `posizione-aperta`. |
+| `bin/sinapsi.js` | CLI: `avvia` (riavvia da solo un server più vecchio del plugin e segnala gli appunti rimasti in sottocartelle), `riavvia`, `ferma`, `stato`, `apri`, `demo`, `posizione-aperta`. |
 | `scripts/build.js` | Genera `agents/` e `skills/` dal roster. Con `--check` verifica che siano aggiornati (CI). |
 | `.claude-plugin/` | Manifest del plugin e del marketplace (la repo è installabile con `/plugin marketplace add`). |
-| `hooks/hooks.json` | Collega i sensori agli eventi di Claude Code, in modalità asincrona, e carica il modulo dell'interruttore. |
+| `hooks/hooks.json` | Collega i sensori agli eventi di Claude Code, in modalità asincrona, più la guardia sincrona, e carica il modulo dell'interruttore. |
 | `hooks/interruttore.tsx` + `types/index.d.ts` | Pannello "Sinapsi" nell'app, voce nella riga di stato e comando `/sinapsi-interruttore`. Da spento nasconde gli agenti `sinapsi:*` (`agent.offer`) e sostituisce il testo della skill (`skill.prompt`); lo stato resta in `$.store`. |
 
 ## Perché questa architettura fa risparmiare token
@@ -48,7 +49,7 @@ Campi comuni: `seq`, `ts`, `type`.
 | type | Campi | Origine |
 |---|---|---|
 | `capo.online` | `sessione`, `cwd` | PreToolUse della skill `sinapsi` |
-| `capo.richiesta` | `sessione`, `testo` | UserPromptSubmit della sessione Capo. Le `<task-notification>` chiudono l'impiegato e non diventano richieste; i `<system-reminder>` si ignorano; i messaggi tra sessioni si mostrano senza XML. |
+| `capo.richiesta` | `sessione`, `testo`, `origine` (utente, sessione), `da`, `recuperata` | UserPromptSubmit della sessione Capo, oppure la trascrizione del Capo quando la sessione diventa Capo (`recuperata`). Le `<task-notification>` chiudono l'impiegato e non diventano richieste; i `<system-reminder>` si ignorano; i messaggi tra sessioni hanno `origine: sessione` e si mostrano senza XML. |
 | `agente.assunto` | `id`, `agente`, `nome`, `reparto`, `modello`, `effort`, `incarico`, `titolo` | PreToolUse dello strumento Agent |
 | `agente.al_lavoro` | `id`, `agentId` | SubagentStart |
 | `agente.stato` | `id`, `testo`, `strumento` | PreToolUse dentro il subagent |

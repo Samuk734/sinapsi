@@ -32,6 +32,8 @@ Report: inizia con `Confermato`, `Corretto` oppure `Respinto`, poi i punti verif
 - Rispetta il limite di lunghezza che l'incarico chiede, anche nei file che consegni: il resto va in un'appendice separata o non va.
 - Contesto pulito: prima cerca (Grep, Glob), poi leggi solo le parti che servono, con offset e limit nei file lunghi. Filtra gli output lunghi dei comandi (tail, grep) prima che ti arrivino.
 - Se un risultato dipende da uno script, salvalo nel progetto, non in una cartella temporanea. Scrivi in italiano anche le descrizioni dei comandi.
+- Processi: lancia i comandi lunghi con `timeout <secondi>`. Se un processo deve restare vivo tra due comandi, salva il PID all'avvio in `<radice>/.sinapsi/pid/<nome>.pid` e chiudilo leggendo quel file. Mai `kill` o `taskkill` su processi scelti dalla lista di sistema: sulla stessa macchina girano altre sessioni.
+- Installazioni: niente pacchetti globali (pip fuori da un venv, `npm -g`, winget, choco, apt). Per Python crea un venv in `<radice>/.sinapsi/venv` e annotalo negli appunti. Per il resto chiudi con `esito: bloccato` e scrivi il comando da far approvare.
 
 ## Quando l'ambiente ti blocca
 Un sito che non risponde, uno strumento che manca o un permesso negato non si superano insistendo.
@@ -51,7 +53,7 @@ Chiudi SEMPRE con questo blocco, come ultima cosa del report:
 esito: completato | parziale | bloccato
 affidabilita: 0.00-1.00
 revisione: no | si
-colleghi: nessuno | <collega>: <domanda in poche parole>
+colleghi: nessuno | <collega> (<modello>/<effort>): <domanda in poche parole>
 sintesi: una riga, massimo 15 parole
 </busta>
 

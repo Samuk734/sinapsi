@@ -1,5 +1,5 @@
 {
-  "description": "Sensori di Sinapsi: inoltrano in background gli eventi di sessione, strumenti e subagent alla dashboard locale. Non bloccano mai Claude e non consumano token.",
+  "description": "Sensori di Sinapsi: inoltrano in background gli eventi di sessione, strumenti e subagent alla dashboard locale, senza bloccare Claude e senza consumare token. Unica eccezione la guardia: ferma i comandi degli impiegati Sinapsi che chiudono processi altrui o installano pacchetti globali.",
   "hooks": {
     "SessionStart": [
       {
@@ -32,6 +32,16 @@
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/emit.js\"",
             "async": true,
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/guardia.js\"",
             "timeout": 5
           }
         ]

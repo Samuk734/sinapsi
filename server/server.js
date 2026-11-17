@@ -11,6 +11,7 @@ const HQ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const leggiJson = (p) => JSON.parse(fs.readFileSync(path.join(HQ, p), 'utf8'));
 const config = leggiJson('config/sinapsi.json');
 let azienda = leggiJson('roster/azienda.json');
+const VERSIONE = leggiJson('package.json').version;
 const PORT = Number(process.env.SINAPSI_PORT) || config.port;
 const MAX_LOG = 3000;
 
@@ -85,7 +86,14 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   try {
     if (req.method === 'GET' && url.pathname === '/health') {
-      return json(res, 200, { ok: true, nome: 'sinapsi', eventi: seq, clienti: clienti.size, demo: demo.attiva, capi: traduttore.capi() });
+      return json(res, 200, { ok: true, nome: 'sinapsi', versione: VERSIONE, pid: process.pid, eventi: seq, clienti: clienti.size, demo: demo.attiva, capi: traduttore.capi() });
+    }
+    // chiusura ordinata, usata da `sinapsi.js riavvia` quando il plugin è più nuovo del server
+    if (req.method === 'POST' && url.pathname === '/api/spegni') {
+      json(res, 200, { ok: true, versione: VERSIONE });
+      for (const c of clienti) c.end();
+      server.close(); setTimeout(() => process.exit(0), 100).unref();
+      return;
     }
     if (req.method === 'GET' && url.pathname === '/stream') return apriStream(req, res);
     if (req.method === 'GET' && url.pathname === '/api/azienda') return json(res, 200, { azienda, modelli: config.modelli });

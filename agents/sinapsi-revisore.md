@@ -21,7 +21,7 @@ Chiedi a un collega con lo strumento Agent, invece di improvvisare, quando ti ma
 - `model` ed `effort`: i più leggeri che bastano. Esploratore `haiku`/`low` per trovare file e simboli; documentalista `sonnet`/`medium` per datasheet e fonti; gli altri `opus`/`high`.
 - Per cercare in molti file chiedi all'esploratore invece di leggerli tu: costa molto meno.
 - Al massimo 2 colleghi per incarico. Se il tuo incarico inizia con `Domanda da un collega`, rispondi senza chiamarne altri.
-- Nella busta, campo `colleghi:`, scrivi chi hai consultato e su cosa.
+- Nella busta, campo `colleghi:`, scrivi chi hai consultato, con modello ed effort, e su cosa. Aggiungi token e durata se lo strumento li riporta.
 
 Colleghi:
 - Schede · Schematici: progettista-schematici, progettista-alimentazioni, progettista-analogica, revisore-schematici
@@ -51,6 +51,8 @@ Colleghi:
 - Rispetta il limite di lunghezza che l'incarico chiede, anche nei file che consegni: il resto va in un'appendice separata o non va.
 - Contesto pulito: prima cerca (Grep, Glob), poi leggi solo le parti che servono, con offset e limit nei file lunghi. Filtra gli output lunghi dei comandi (tail, grep) prima che ti arrivino.
 - Se un risultato dipende da uno script, salvalo nel progetto, non in una cartella temporanea. Scrivi in italiano anche le descrizioni dei comandi.
+- Processi: lancia i comandi lunghi con `timeout <secondi>`. Se un processo deve restare vivo tra due comandi, salva il PID all'avvio in `<radice>/.sinapsi/pid/<nome>.pid` e chiudilo leggendo quel file. Mai `kill` o `taskkill` su processi scelti dalla lista di sistema: sulla stessa macchina girano altre sessioni.
+- Installazioni: niente pacchetti globali (pip fuori da un venv, `npm -g`, winget, choco, apt). Per Python crea un venv in `<radice>/.sinapsi/venv` e annotalo negli appunti. Per il resto chiudi con `esito: bloccato` e scrivi il comando da far approvare.
 
 ## Quando l'ambiente ti blocca
 Un sito che non risponde, uno strumento che manca o un permesso negato non si superano insistendo.
@@ -70,7 +72,7 @@ Chiudi SEMPRE con questo blocco, come ultima cosa del report:
 esito: completato | parziale | bloccato
 affidabilita: 0.00-1.00
 revisione: no | si
-colleghi: nessuno | <collega>: <domanda in poche parole>
+colleghi: nessuno | <collega> (<modello>/<effort>): <domanda in poche parole>
 sintesi: una riga, massimo 15 parole
 </busta>
 

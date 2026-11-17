@@ -10,6 +10,7 @@ import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { leggiBusta, riassumiStrumento } from '../server/traduttore.js';
 import { costruisci } from './build.js';
+import { decidi, MOTIVI } from '../hooks/guardia.js';
 
 const HQ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = 7499;
@@ -100,11 +101,24 @@ try {
     tool_input: { subagent_type: 'sinapsi:sinapsi-documentalista', description: 'Datasheet STM32G0', prompt: 'x', model: 'sonnet', effort: 'medium' } });
   await post('/hook', { ...comuni, hook_event_name: 'PostToolUse', tool_name: 'Agent', tool_use_id: 'toolu_bloccato', tool_input: {},
     tool_response: { status: 'completed', content: [{ type: 'text', text: 'st.com non risponde.\n<busta>\nesito: bloccato\naffidabilita: 0.25\nrevisione: si\nsintesi: fonte irraggiungibile\n</busta>' }] } });
+  // la richiesta che apre Sinapsi arriva prima del server: si recupera dalla trascrizione del Capo
+  const trascrCapo = path.join(dir, 'capo-rec.jsonl');
+  fs.writeFileSync(trascrCapo, [
+    { type: 'user', message: { role: 'user', content: 'Apri Sinapsi e fai il reverse di snp.exe' } },
+    { type: 'user', isMeta: true, message: { role: 'user', content: [{ type: 'text', text: 'testo della skill' }] } },
+    { type: 'user', message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'x', content: 'ok' }] } },
+    { type: 'user', message: { role: 'user', content: '<system-reminder>promemoria</system-reminder>' } },
+  ].map((o) => JSON.stringify(o)).join('\n') + '\n');
+  await post('/hook', { session_id: 'sess-rec', transcript_path: trascrCapo, cwd: 'C:/y', hook_event_name: 'PreToolUse', tool_name: 'Skill', tool_input: { skill: 'sinapsi:apri' } });
   await attesa(300);
 
   const di = (t) => eventi.filter((e) => e.type === t);
   await prova('le sessioni che non hanno aperto Sinapsi vengono ignorate', () => assert.equal(eventi.some((e) => e.sessione === 'altra' || e.id === 'x'), false));
-  await prova('capo online', () => assert.equal(di('capo.online').length, 1));
+  await prova('capo online', () => assert.equal(di('capo.online').filter((e) => e.sessione === S).length, 1));
+  await prova('richiesta arrivata prima della dashboard: recuperata dalla trascrizione', () => {
+    const r = di('capo.richiesta').filter((e) => e.sessione === 'sess-rec');
+    assert.equal(r.length, 1); assert.equal(r[0].testo, 'Apri Sinapsi e fai il reverse di snp.exe'); assert.equal(r[0].recuperata, true);
+  });
   await prova('chiamata senza modello: la dashboard mostra eredita/sessione, non un default del roster', () => {
     const a = di('agente.assunto').find((e) => e.id === 'toolu_senza_modello');
     assert.equal(a?.modello, 'eredita'); assert.equal(a?.effort, 'sessione');
@@ -143,7 +157,8 @@ try {
     assert.deepEqual(di('busta').find((e) => e.pid === 'toolu_bloccato:out')?.percorso, ['toolu_bloccato', 'capo']);
   });
   await prova('messaggio da un\'altra sessione mostrato senza XML', () => {
-    assert.ok(di('capo.richiesta').some((e) => e.testo === 'Messaggio da review-sinapsi: Review pronta'));
+    const m = di('capo.richiesta').find((e) => e.testo === 'Messaggio da review-sinapsi: Review pronta');
+    assert.equal(m?.origine, 'sessione'); assert.equal(m?.da, 'review-sinapsi');
   });
 } finally {
   server.kill();
@@ -184,7 +199,23 @@ await prova('manifest e hook del plugin coerenti', () => {
   const hooks = JSON.parse(fs.readFileSync(path.join(HQ, 'hooks/hooks.json'), 'utf8')).hooks;
   assert.equal(plugin.name, 'sinapsi'); assert.equal(market.plugins[0].name, plugin.name);
   for (const ev of ['PreToolUse', 'PostToolUse', 'SubagentStart', 'SubagentStop']) assert.ok(hooks[ev]?.[0].hooks[0].async, ev);
-  assert.ok(Object.values(hooks).flat().every((g) => g.hooks.every((h) => h.async)), 'nessun hook deve bloccare Claude');
+  // l'unica hook sincrona è la guardia, e solo su Bash e PowerShell
+  const sincrone = Object.values(hooks).flat().filter((g) => g.hooks.some((h) => !h.async));
+  assert.equal(sincrone.length, 1, 'solo la guardia può fermare un comando');
+  assert.equal(sincrone[0].matcher, 'Bash|PowerShell'); assert.match(sincrone[0].hooks[0].command, /guardia\.js/);
+});
+await prova('guardia: ferma kill su processi altrui e installazioni globali, solo per gli impiegati', () => {
+  const imp = (command, tool_name = 'Bash') => decidi({ agent_type: 'sinapsi:sinapsi-reverse-firmware', tool_name, tool_input: { command } });
+  for (const c of ['taskkill //PID 10508 //F 2>&1; taskkill //PID 8280 //F', 'kill -9 $(pgrep -f unicorn)', 'pkill -f emu.py',
+    'Get-Process python | Stop-Process -Force', 'cmd /c "taskkill /IM python.exe /F"']) assert.equal(imp(c), MOTIVI.processi, c);
+  for (const c of ['pip install --user unicorn', 'C:/Python312/python.exe -m pip install pefile', 'npm i -g typescript', 'winget install Git.Git', 'sudo apt-get install -y binwalk'])
+    assert.equal(imp(c), MOTIVI.installazioni, c);
+  for (const c of ['python -I emu.py & P=$!; sleep 30; kill $P', 'kill $(cat .sinapsi/pid/emu.pid)', String.raw`Stop-Process -Id (Get-Content C:\prj\.sinapsi\pid\srv.pid)`,
+    'timeout --kill-after=5 600 python -I emu.py', 'grep -rn "kill" src/', 'tasklist | grep python',
+    'python -m venv .sinapsi/venv && .sinapsi/venv/Scripts/python -m pip install unicorn', 'npm install --save-dev vitest', 'cargo build'])
+    assert.equal(imp(c), null, c);
+  assert.equal(decidi({ tool_name: 'Bash', tool_input: { command: 'taskkill /PID 1 /F' } }), null, 'la chat del Capo non passa dalla guardia');
+  assert.equal(decidi({ agent_type: 'Explore', tool_name: 'Bash', tool_input: { command: 'pkill node' } }), null, 'subagent non di Sinapsi');
 });
 await prova('interruttore: modulo nel plugin accanto alle hook classiche', () => {
   const h = JSON.parse(fs.readFileSync(path.join(HQ, 'hooks/hooks.json'), 'utf8'));

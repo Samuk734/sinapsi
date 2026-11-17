@@ -19,7 +19,7 @@ export function creaPannelli({ azienda, nomeDi, vaiA }) {
 
   function registra(e) {
     switch (e.type) {
-      case 'capo.richiesta': richieste.push({ testo: e.testo, ts: e.ts, ids: [] }); break;
+      case 'capo.richiesta': richieste.push({ testo: e.testo, ts: e.ts, ids: [], origine: e.origine, da: e.da }); break;
       case 'agente.assunto': {
         const rep = azienda.reparti.find((r) => r.id === e.reparto), capoRep = e.ruolo === 'capo-reparto';
         registro.set(e.id, {
@@ -27,7 +27,8 @@ export function creaPannelli({ azienda, nomeDi, vaiA }) {
           nome: capoRep ? (rep?.capoReparto.nome || 'Capo reparto') : (e.nome || e.agente),
           passi: [{ tipo: 'incarico', testo: e.incarico || e.titolo, ts: e.ts }], stato: 'al lavoro', revisioni: [],
         });
-        if (!richieste.length) richieste.push({ testo: 'Sessione in corso', ts: e.ts, ids: [] });
+        // richiesta fatta prima che la dashboard partisse e non recuperata: è uno stato, non un messaggio
+        if (!richieste.length) richieste.push({ testo: 'Richiesta fatta prima che la dashboard partisse', ts: e.ts, ids: [], origine: 'stato' });
         richieste.at(-1).ids.push(e.id);
         if (e.revisioneDi) registro.get(e.revisioneDi)?.revisioni.push(e.id);
         break;
@@ -74,9 +75,19 @@ export function creaPannelli({ azienda, nomeDi, vaiA }) {
     return h;
   }
 
+  // costo di un lavoro: token nuovi (input, output, scritture in cache), letture dalla cache e durata
+  const k = (v) => (v > 999999 ? `${(v / 1e6).toFixed(1)}M` : `${(v / 1000).toFixed(1)}k`);
+  function costoLavoro(s) {
+    const t = s.token, parti = [];
+    if (t) parti.push(`${k((t.input || 0) + (t.output || 0) + (t.cacheScritta || 0))} nuovi`, `${k(t.cache || 0)} da cache`);
+    const ms = s.fine?.durataMs || (s.fine ? s.fine.ts - s.info.ts : 0);
+    if (ms > 0) parti.push(ms < 60000 ? `${Math.round(ms / 1000)} s` : `${Math.round(ms / 60000)} min`);
+    return parti.join(' · ');
+  }
+
   function testaLavoro(s) {
     const m = coloreModello(s.info.modello);
-    const tok = s.token ? `${((s.token.input + s.token.output + s.token.cache + (s.token.cacheScritta || 0)) / 1000).toFixed(1)}k token` : '';
+    const tok = esc(costoLavoro(s));
     return `<h2 style="color:${s.colore}">${esc(s.nome)}</h2>
       <div class="sotto">${esc(s.reparto?.nome || 'esterno')} · <span class="chip" style="--m:${m}">${esc(s.info.modello)} · ${esc(s.info.effort)}</span> ${tok}</div>
       <div class="riga"><span>Incarico</span><span>${esc(s.info.titolo)}</span></div>`;
@@ -110,12 +121,16 @@ export function creaPannelli({ azienda, nomeDi, vaiA }) {
     el.innerHTML = richieste.slice(-4).reverse().map((r) => {
       const righe = r.ids.map((id) => registro.get(id)).filter((s) => s && !(s.capoRep && s.info.revisioneDi && registro.has(s.info.revisioneDi)));
       const vivi = righe.filter((s) => s.stato === 'al lavoro').length;
-      return `<div class="rm-richiesta"><b>Richiesta al Capo</b><span class="ora">${ora(r.ts)} · ${righe.length} connessioni${vivi ? ` · ${vivi} al lavoro` : ''}</span><div>${esc(r.testo)}</div></div>`
+      const sessione = r.origine === 'sessione';
+      const etichetta = sessione ? `Messaggio da ${r.da || "un'altra sessione"}` : r.origine === 'stato' ? 'Lavoro in corso' : 'Richiesta al Capo';
+      const testo = sessione ? r.testo.replace(/^Messaggio da [^:]+:\s*/, '') : r.testo;
+      return `<div class="rm-richiesta ${sessione ? 'sessione' : r.origine === 'stato' ? 'stato' : ''}"><b>${esc(etichetta)}</b><span class="ora">${ora(r.ts)} · ${righe.length} connessioni${vivi ? ` · ${vivi} al lavoro` : ''}</span><div>${esc(testo)}</div></div>`
         + righe.map((s) => {
           const b = s.busta, col = b ? coloreAffidabilita(b.affidabilita) : s.colore;
           const esito = s.stato === 'al lavoro' ? '<span class="vivo"></span>' : `<b style="color:${col}">${b?.affidabilita != null ? Math.round(b.affidabilita * 100) + '%' : '✓'}</b>`;
           const via = s.capoRep ? `Capo → ${esc(s.nome)}` : `Capo → ${esc(s.reparto?.nome || 'esterni')} → ${esc(s.nome)}`;
-          const ultimo = s.stato === 'al lavoro' ? (s.statoTesto || 'si sveglia…') : (b?.sintesi || '');
+          const costo = s.stato === 'al lavoro' ? '' : costoLavoro(s);
+          const ultimo = s.stato === 'al lavoro' ? (s.statoTesto || 'si sveglia…') : [b?.sintesi, costo].filter(Boolean).join(' · ');
           return `<div class="conn ${aperte.has(s.id) ? 'aperta' : ''}" style="--c:${s.colore}" data-id="${esc(s.id)}">
             <div class="testa"><div class="mezzo"><div class="via">${via}</div><div class="cosa">${esc(s.info.titolo)}</div><div class="ultimo">${esc(ultimo)}</div></div>
             <span class="chip" style="--m:${coloreModello(s.info.modello)}">${esc(s.info.modello)}·${esc(s.info.effort)}</span>${esito}</div>
@@ -162,12 +177,21 @@ export function creaPannelli({ azienda, nomeDi, vaiA }) {
     if (e.code === 'KeyL') alternaFlusso();
     if (e.code === 'KeyR') alternaDestra();
   });
-  function voce({ nome, colore, tipo, testo, onclick }) {
+  function voce({ nome, colore, tipo, testo, onclick, ts }) {
     const d = document.createElement('div');
     d.className = `voce ${tipo}`; d.style.setProperty('--c', colore);
-    d.innerHTML = `<div class="chi">${esc(nome)}<em>${ora()}</em></div><div class="tx">${esc(String(testo || '').slice(0, 220))}</div>`;
+    d.innerHTML = `<div class="chi">${esc(nome)}<em>${ora(ts)}</em></div><div class="tx">${esc(String(testo || '').slice(0, 220))}</div>`;
     if (onclick) d.onclick = onclick;
     $('coscienza').prepend(d); while ($('coscienza').children.length > 40) $('coscienza').lastChild.remove();
+  }
+  // al cambio di vista il flusso riparte dalle ultime voci già arrivate, non vuoto
+  // (solo pensieri, testi e azioni degli impiegati: gli output degli strumenti restano nel Dettaglio)
+  function ripristinaFlusso(eventi) {
+    const voci = eventi.filter((e) => e.type === 'agente.pensiero' && e.tipo !== 'risultato' && registro.has(e.id)).slice(-30);
+    for (const e of voci) {
+      const s = registro.get(e.id);
+      voce({ nome: s.nome, colore: s.colore, tipo: e.tipo, testo: e.testo, ts: e.ts, onclick: () => vaiA(s, s.passi.find((p) => p.ts === e.ts)) });
+    }
   }
 
   function ticker(e) {
@@ -179,8 +203,11 @@ export function creaPannelli({ azienda, nomeDi, vaiA }) {
   }
 
   let timerRich;
-  function richiesta(testo) {
-    const r = $('richiesta'); r.innerHTML = `<b>RICHIESTA AL CAPO</b>${esc(testo)}`; r.style.opacity = 1;
+  function richiesta(e) {
+    const sessione = e.origine === 'sessione';
+    const titolo = sessione ? `MESSAGGIO DA ${String(e.da || "un'altra sessione").toUpperCase()}` : 'RICHIESTA AL CAPO';
+    const testo = sessione ? String(e.testo || '').replace(/^Messaggio da [^:]+:\s*/, '') : e.testo;
+    const r = $('richiesta'); r.innerHTML = `<b>${esc(titolo)}</b>${esc(testo)}`; r.classList.toggle('sessione', sessione); r.style.opacity = 1;
     clearTimeout(timerRich); timerRich = setTimeout(() => { r.style.opacity = 0.35; }, 12000);
   }
   function posizione(e) {
@@ -195,5 +222,5 @@ export function creaPannelli({ azienda, nomeDi, vaiA }) {
     $('metriche').innerHTML = valori.map(([i, b]) => `<div class="metrica"><i>${i}</i><b>${k(b)}</b></div>`).join('');
   }
 
-  return { registro, registra, htmlLavoro, testaLavoro, mostraDettaglio, apriBusta, apriLavori, voce, ticker, richiesta, posizione, metriche };
+  return { registro, registra, htmlLavoro, testaLavoro, mostraDettaglio, apriBusta, apriLavori, voce, ripristinaFlusso, ticker, richiesta, posizione, metriche };
 }
